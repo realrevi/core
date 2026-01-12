@@ -1927,11 +1927,66 @@ class Api:
             return {'success': False, 'error': str(e)}
 
 
+    def handle_dropped_files(self, files_data: List[Dict]) -> Dict:
+        """Handle files dropped onto the UI (content transfer)"""
+        try:
+            if not files_data:
+                return {'success': False, 'error': 'Dosya verisi yok'}
+
+            import base64
+            import tempfile
+            
+            self.current_file_paths = []
+            temp_dir = tempfile.gettempdir()
+
+            for file_item in files_data:
+                name = file_item.get('name', 'unknown.xlsx')
+                content = file_item.get('content') # base64 string
+                
+                if not content:
+                    continue
+                
+                # Basic validation
+                if not name.lower().endswith(('.xlsx', '.xls', '.csv')):
+                    continue
+
+                # Remove header if present (e.g. "data:application/vnd.ms-excel;base64,")
+                if ',' in content:
+                    content = content.split(',')[1]
+                
+                # Save to temp file
+                file_path = os.path.join(temp_dir, f"CORE_{name}")
+                with open(file_path, 'wb') as f:
+                    f.write(base64.b64decode(content))
+                
+                self.current_file_paths.append(file_path)
+
+            if not self.current_file_paths:
+                return {'success': False, 'error': 'Geçerli Excel dosyası işlenemedi'}
+
+            files_info = []
+            for path in self.current_file_paths:
+                check_result = self.analyzer.check_file(path)
+                if check_result['success']:
+                    files_info.append({
+                        'name': os.path.basename(path),
+                        'path': path,
+                        'job_no': check_result.get('job_no', '-'),
+                        'unknown_materials': check_result.get('unknown', [])
+                    })
+            
+            return {
+                'success': True, 
+                'files': files_info
+            }
+        except Exception as e:
+            return {'success': False, 'error': str(e)}
+
     def select_file(self) -> Dict:
         """Select Excel file(s) for analysis"""
         try:
             result = webview.windows[0].create_file_dialog(
-                webview.OPEN_DIALOG,
+                webview.FileDialog.OPEN,
                 allow_multiple=True,
                 file_types=('Excel Files (*.xlsx;*.xls;*.csv)', 'All files (*.*)')
             )
@@ -1973,7 +2028,7 @@ class Api:
             default_name = f"{base_name}_{timestamp}.xlsx"
             
             result_dialog = webview.windows[0].create_file_dialog(
-                webview.SAVE_DIALOG,
+                webview.FileDialog.SAVE,
                 save_filename=default_name,
                 file_types=('Excel Files (*.xlsx)', 'All files (*.*)')
             )
@@ -2035,7 +2090,7 @@ class Api:
 
         try:
             # Get output directory
-            result = webview.windows[0].create_file_dialog(webview.FOLDER_DIALOG)
+            result = webview.windows[0].create_file_dialog(webview.FileDialog.FOLDER)
             if not result:
                 return {'success': False, 'error': 'Kayıt yeri seçilmedi'}
 
@@ -2095,7 +2150,7 @@ class Api:
             default_name = f"BirlesikListe_{timestamp}.xlsx"
 
             result = webview.windows[0].create_file_dialog(
-                webview.SAVE_DIALOG,
+                webview.FileDialog.SAVE,
                 save_filename=default_name,
                 file_types=('Excel Files (*.xlsx)', 'All files (*.*)')
             )
@@ -2133,7 +2188,7 @@ class Api:
             default_name = f"core_backup_{timestamp}.json"
 
             result = webview.windows[0].create_file_dialog(
-                webview.SAVE_DIALOG,
+                webview.FileDialog.SAVE,
                 save_filename=default_name,
                 file_types=('JSON Files (*.json)', 'All files (*.*)')
             )

@@ -4,68 +4,70 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CORE v3.0 - Cut Optimization & Reporting Engine</title>
+    <title>CORE v3.6 - Cut Optimization & Reporting Engine</title>
     <link
         href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap"
         rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="icon" href="CORE_LOGO.png" type="image/png">
     <style>
         /* ============================================
            SECTION 1: CSS VARIABLES & THEMES
            ============================================ */
         :root {
-            /* Light Theme (Default) */
+            /* Light Theme (Modern) */
             --bg-primary: #f8fafc;
             --bg-secondary: #f1f5f9;
             --bg-tertiary: #e2e8f0;
-            --bg-card: rgba(255, 255, 255, 0.8);
-            --bg-card-hover: rgba(255, 255, 255, 0.95);
-            --bg-glass: rgba(255, 255, 255, 0.6);
-            --bg-glass-border: rgba(0, 0, 0, 0.08);
-            --bg-input: rgba(255, 255, 255, 0.9);
+            --bg-card: rgba(255, 255, 255, 0.7);
+            --bg-card-hover: rgba(255, 255, 255, 0.9);
+            --bg-glass: rgba(255, 255, 255, 0.5);
+            --bg-glass-border: rgba(255, 255, 255, 0.4);
+            --bg-input: rgba(255, 255, 255, 0.8);
 
-            --text-primary: #1e293b;
+            --text-primary: #0f172a;
             --text-secondary: #475569;
             --text-muted: #94a3b8;
             --text-accent: #64748b;
 
-            --border-color: rgba(0, 0, 0, 0.1);
+            --border-color: rgba(148, 163, 184, 0.2);
             --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
-            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-            --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            --shadow-glow: 0 0 15px rgba(99, 102, 241, 0.3);
 
-            /* Accent Colors */
+            /* Accent Colors (Vibrant) */
             --primary: #6366f1;
             --primary-light: #818cf8;
             --primary-dark: #4f46e5;
             --secondary: #8b5cf6;
             --success: #10b981;
             --success-light: #34d399;
-            --danger: #dc2626;
-            --danger-light: #ef4444;
+            --danger: #ef4444;
+            --danger-light: #f87171;
             --warning: #f59e0b;
             --warning-light: #fbbf24;
-            --info: #3b82f6;
-            --info-light: #60a5fa;
+            --info: #06b6d4;
+            --info-light: #22d3ee;
 
             /* Logo Renkleri */
-            --logo-dark: #1f315d;
-            --logo-mid: #223961;
-            --logo-light: #2d4a7c;
+            --logo-dark: #1e293b;
+            --logo-mid: #334155;
+            --logo-light: #475569;
 
             /* Badge Colors */
-            --badge-18: #1f315d;
-            --badge-16: #6366f1;
-            --badge-8: #dc2626;
+            --badge-18: #4f46e5;
+            --badge-16: #8b5cf6;
+            --badge-8: #f43f5e;
 
-            /* Gradients - Logo renklerine göre */
-            --gradient-primary: linear-gradient(135deg, #1f315d 0%, #2d4a7c 100%);
-            --gradient-success: linear-gradient(135deg, #10b981 0%, #34d399 100%);
-            --gradient-danger: linear-gradient(135deg, #dc2626 0%, #ef4444 100%);
-            --gradient-warning: linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%);
-            --gradient-info: linear-gradient(135deg, #1f315d 0%, #3b82f6 100%);
-            --gradient-bg: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            /* Gradients - Premium Flows */
+            --gradient-primary: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+            --gradient-success: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            --gradient-danger: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            --gradient-warning: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            --gradient-info: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
+            --gradient-bg: linear-gradient(135deg, #f8fafc 0%, #eff6ff 100%);
 
             /* Sizing */
             --header-height: 70px;
@@ -76,33 +78,34 @@
             --border-radius-lg: 24px;
 
             /* Transitions */
-            --transition-fast: 0.15s ease;
-            --transition-normal: 0.3s ease;
-            --transition-slow: 0.5s ease;
+            --transition-fast: 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+            --transition-normal: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            --transition-slow: 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            --transition-bounce: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
 
         [data-theme="dark"] {
             --bg-primary: #0f172a;
             --bg-secondary: #1e293b;
             --bg-tertiary: #334155;
-            --bg-card: rgba(30, 41, 59, 0.8);
-            --bg-card-hover: rgba(30, 41, 59, 0.95);
-            --bg-glass: rgba(15, 23, 42, 0.6);
-            --bg-glass-border: rgba(255, 255, 255, 0.1);
+            --bg-card: rgba(30, 41, 59, 0.7);
+            --bg-card-hover: rgba(30, 41, 59, 0.9);
+            --bg-glass: rgba(15, 23, 42, 0.7);
+            --bg-glass-border: rgba(255, 255, 255, 0.08);
             --bg-input: rgba(30, 41, 59, 0.9);
 
-            --text-primary: #f1f5f9;
-            --text-secondary: #cbd5e1;
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
             --text-muted: #64748b;
-            --text-accent: #94a3b8;
+            --text-accent: #475569;
 
-            --border-color: rgba(255, 255, 255, 0.1);
+            --border-color: rgba(255, 255, 255, 0.05);
             --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
             --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4);
             --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.4);
             --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
 
-            --gradient-bg: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%);
+            --gradient-bg: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
         }
 
         /* ============================================
@@ -357,15 +360,16 @@
            ============================================ */
         .glass {
             background: var(--bg-glass);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
             border: 1px solid var(--bg-glass-border);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
         }
 
         .glass-card {
             background: var(--bg-card);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
             border: 1px solid var(--border-color);
             border-radius: var(--border-radius);
             box-shadow: var(--shadow-lg);
@@ -374,8 +378,9 @@
 
         .glass-card:hover {
             background: var(--bg-card-hover);
+            transform: translateY(-4px);
             box-shadow: var(--shadow-xl);
-            transform: translateY(-2px);
+            border-color: rgba(255, 255, 255, 0.5);
         }
 
         /* ============================================
@@ -395,85 +400,89 @@
             transition: all var(--transition-fast);
             text-decoration: none;
             white-space: nowrap;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn:active:not(:disabled) {
+            transform: scale(0.97);
         }
 
         .btn:disabled {
-            opacity: 0.5;
+            opacity: 0.6;
             cursor: not-allowed;
+            filter: grayscale(100%);
         }
 
-        /* Primary Button - Logo Koyu Mavi */
+        /* Primary Button */
         .btn-primary {
-            background: var(--logo-dark);
+            background: var(--gradient-primary);
             color: white;
-            border: 2px solid var(--logo-dark);
+            box-shadow: 0 4px 6px rgba(79, 70, 229, 0.2);
+            border: none;
         }
 
         .btn-primary:hover:not(:disabled) {
-            background: white;
-            color: var(--logo-dark);
-            border-color: var(--logo-dark);
+            box-shadow: 0 8px 15px rgba(79, 70, 229, 0.3);
             transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(31, 49, 93, 0.3);
+            filter: brightness(1.1);
         }
 
-        /* Success Button - Yeşil */
+        /* Success Button */
         .btn-success {
-            background: var(--success);
+            background: var(--gradient-success);
             color: white;
-            border: 2px solid var(--success);
+            box-shadow: 0 4px 6px rgba(16, 185, 129, 0.2);
+            border: none;
         }
 
         .btn-success:hover:not(:disabled) {
-            background: white;
-            color: var(--success);
-            border-color: var(--success);
+            box-shadow: 0 8px 15px rgba(16, 185, 129, 0.3);
             transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(16, 185, 129, 0.3);
+            filter: brightness(1.1);
         }
 
-        /* Danger Button - Kırmızı */
+        /* Danger Button */
         .btn-danger {
-            background: var(--danger);
+            background: var(--gradient-danger);
             color: white;
-            border: 2px solid var(--danger);
+            box-shadow: 0 4px 6px rgba(220, 38, 38, 0.2);
+            border: none;
         }
 
         .btn-danger:hover:not(:disabled) {
-            background: white;
-            color: var(--danger);
-            border-color: var(--danger);
+            box-shadow: 0 8px 15px rgba(220, 38, 38, 0.3);
             transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(220, 38, 38, 0.3);
+            filter: brightness(1.1);
         }
 
-        /* Warning Button - Turuncu */
+        /* Warning Button */
         .btn-warning {
-            background: var(--warning);
+            background: var(--gradient-warning);
             color: white;
-            border: 2px solid var(--warning);
+            box-shadow: 0 4px 6px rgba(245, 158, 11, 0.2);
+            border: none;
         }
 
         .btn-warning:hover:not(:disabled) {
-            background: white;
-            color: var(--warning);
-            border-color: var(--warning);
+            box-shadow: 0 8px 15px rgba(245, 158, 11, 0.3);
             transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(245, 158, 11, 0.3);
+            filter: brightness(1.1);
         }
 
-        /* Secondary Button - Gri/Outline */
+        /* Secondary Button */
         .btn-secondary {
             background: transparent;
-            color: var(--logo-dark);
-            border: 2px solid var(--logo-dark);
+            color: var(--text-primary);
+            border: 2px solid var(--border-color);
         }
 
         .btn-secondary:hover:not(:disabled) {
-            background: var(--logo-dark);
-            color: white;
+            background: var(--bg-tertiary);
+            border-color: var(--text-secondary);
             transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(31, 49, 93, 0.2);
+            color: var(--text-primary);
+            box-shadow: none;
         }
 
         .btn-ghost {
@@ -1153,6 +1162,22 @@
             color: var(--text-muted);
         }
 
+        /* Dark Theme Table Overrides */
+        [data-theme="dark"] th {
+            background: #1e293b;
+            color: #cbd5e1;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+        }
+
+        [data-theme="dark"] td {
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            color: #cbd5e1;
+        }
+
+        [data-theme="dark"] tr:hover td {
+            background: rgba(255, 255, 255, 0.03);
+        }
+
         /* ============================================
            SECTION 15: MODALS
            ============================================ */
@@ -1258,6 +1283,11 @@
             gap: 0.75rem;
             padding: 1.25rem 1.5rem;
             border-top: 1px solid var(--border-color);
+        }
+
+        /* Fix settings modal jumping */
+        #modal-settings .modal-body {
+            min-height: 700px;
         }
 
         /* ============================================
@@ -2056,10 +2086,144 @@
                 border: 1px solid #ddd;
             }
         }
+
+        /* ============================================
+           SECTION 25: LOADING OVERLAY
+           ============================================ */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: var(--gradient-bg);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            transition: opacity 0.5s ease, visibility 0.5s ease;
+        }
+
+        .loading-overlay.hidden {
+            opacity: 0;
+            visibility: hidden;
+        }
+
+        .loading-logo {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        .loading-logo .logo-img {
+            width: 80px;
+            height: 80px;
+            margin-bottom: 1rem;
+            animation: pulse-logo 2s ease-in-out infinite;
+        }
+
+        .loading-logo h1 {
+            font-size: 2rem;
+            font-weight: 800;
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        @keyframes pulse-logo {
+
+            0%,
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+
+            50% {
+                transform: scale(1.05);
+                opacity: 0.8;
+            }
+        }
+
+        /* Smooth Progress Bar */
+        .loading-progress {
+            width: 300px;
+            height: 6px;
+            background: var(--bg-tertiary);
+            border-radius: 999px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .loading-progress-bar {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, var(--primary) 0%, var(--primary-light) 50%, var(--primary) 100%);
+            background-size: 200% 100%;
+            border-radius: 999px;
+            transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+            animation: shimmer 2s linear infinite;
+        }
+
+        @keyframes shimmer {
+            0% {
+                background-position: 200% 0;
+            }
+
+            100% {
+                background-position: -200% 0;
+            }
+        }
+
+        .loading-text {
+            margin-top: 1rem;
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+
+        /* Dark Mode Overrides for Visibility */
+        [data-theme="dark"] .btn-icon {
+            color: var(--text-primary);
+            background: rgba(255, 255, 255, 0.05);
+            border-color: rgba(255, 255, 255, 0.1);
+        }
+
+        [data-theme="dark"] .btn-icon:hover {
+            background: white;
+            color: var(--logo-dark);
+            border-color: white;
+        }
+
+        [data-theme="dark"] .nav-btn:not(.active):hover {
+            color: white;
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        [data-theme="dark"] .header-logo h1 {
+            background: none;
+            -webkit-text-fill-color: white;
+            color: white;
+        }
     </style>
 </head>
 
 <body>
+    <!-- ============================================
+         LOADING OVERLAY (Auto-login animasyonu)
+         ============================================ -->
+    <div id="loading-overlay" class="loading-overlay">
+        <div class="loading-logo">
+            <img src="CORE_LOGO.png" alt="CORE" class="logo-img">
+            <h1>CORE</h1>
+        </div>
+        <div class="loading-progress">
+            <div id="loading-progress-bar" class="loading-progress-bar"></div>
+        </div>
+        <p class="loading-text">Yükleniyor...</p>
+    </div>
+
     <!-- ============================================
          APP CONTAINER
          ============================================ -->
@@ -3201,8 +3365,59 @@
             dropZone.addEventListener('drop', async (e) => {
                 e.preventDefault();
                 dropZone.classList.remove('drag-over');
-                await selectFilesWithPyWebview();
+
+                // Dropped files
+                const files = Array.from(e.dataTransfer.files);
+                if (files.length === 0) return;
+
+                showToast('info', 'Okunuyor', 'Dosyalar okunuyor...');
+
+                // Read files as DataURL (Base64)
+                const promises = files.map(file => {
+                    return new Promise((resolve, reject) => {
+                        const reader = new FileReader();
+                        reader.onload = () => resolve({
+                            name: file.name,
+                            content: reader.result
+                        });
+                        reader.onerror = reject;
+                        reader.readAsDataURL(file);
+                    });
+                });
+
+                try {
+                    const filesData = await Promise.all(promises);
+                    if (filesData.length > 0) {
+                        await handleDroppedFiles(filesData);
+                    } else {
+                        showToast('error', 'Hata', 'Dosyalar okunamadı');
+                    }
+                } catch (err) {
+                    console.error('File read error:', err);
+                    showToast('error', 'Hata', 'Dosya okuma hatası');
+                }
             });
+        }
+
+        // Sürüklenen dosyaları işle
+        async function handleDroppedFiles(paths) {
+            try {
+                showToast('info', 'İşleniyor', 'Dosyalar kontrol ediliyor...');
+                const result = await api('handle_dropped_files', paths);
+
+                if (result && result.success && result.files) {
+                    state.files = result.files;
+                    updateFileList();
+                    if (result.files.length > 0) {
+                        showToast('success', 'Dosyalar Yüklendi', `${result.files.length} dosya eklendi`);
+                    }
+                } else {
+                    showToast('error', 'Hata', result.error || 'Dosyalar işlenemedi');
+                }
+            } catch (error) {
+                console.error('Drop error:', error);
+                showToast('error', 'Hata', 'Dosya işleme hatası');
+            }
         }
 
         // PyWebview ile çoklu dosya seç
@@ -5001,10 +5216,47 @@
         window.addEventListener('pywebviewready', async () => {
             console.log('PyWebview ready');
 
-            // Kayıtlı oturum varsa otomatik giriş yap
-            const autoLoggedIn = await checkSavedSession();
-            if (autoLoggedIn) {
-                console.log('Auto-login successful');
+            const overlay = document.getElementById('loading-overlay');
+            const progressBar = document.getElementById('loading-progress-bar');
+
+            // Smooth progress animation
+            async function animateProgress(targetPercent, duration = 400) {
+                progressBar.style.width = targetPercent + '%';
+                await new Promise(resolve => setTimeout(resolve, duration));
+            }
+
+            try {
+                // Progress: %30 - Başlatılıyor
+                await animateProgress(30);
+
+                // Kayıtlı oturumu kontrol et
+                const result = await api('check_saved_session');
+
+                // Progress: %70 - Oturum kontrol edildi
+                await animateProgress(70);
+
+                if (result && result.success) {
+                    // Progress: %100 - Giriş başarılı
+                    await animateProgress(100);
+
+                    state.user = result.user;
+                    state.isAdmin = result.is_admin;
+
+                    // Overlay'i gizle ve ana ekranı göster
+                    setTimeout(() => {
+                        overlay.classList.add('hidden');
+                        showMainScreen();
+                    }, 300);
+
+                    console.log('Auto-login successful!');
+                } else {
+                    // Kayıtlı oturum yok - login ekranını göster
+                    overlay.classList.add('hidden');
+                    console.log('No saved session, showing login');
+                }
+            } catch (error) {
+                console.error('Session check error:', error);
+                overlay.classList.add('hidden');
             }
         });
     </script>
