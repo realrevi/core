@@ -1,0 +1,4693 @@
+<!DOCTYPE html>
+<html lang="tr" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CORE v3.0 - Cut Optimization & Reporting Engine</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* ============================================
+           SECTION 1: CSS VARIABLES & THEMES
+           ============================================ */
+        :root {
+            /* Light Theme (Default) */
+            --bg-primary: #f8fafc;
+            --bg-secondary: #f1f5f9;
+            --bg-tertiary: #e2e8f0;
+            --bg-card: rgba(255, 255, 255, 0.8);
+            --bg-card-hover: rgba(255, 255, 255, 0.95);
+            --bg-glass: rgba(255, 255, 255, 0.6);
+            --bg-glass-border: rgba(0, 0, 0, 0.08);
+            --bg-input: rgba(255, 255, 255, 0.9);
+            
+            --text-primary: #1e293b;
+            --text-secondary: #475569;
+            --text-muted: #94a3b8;
+            --text-accent: #64748b;
+            
+            --border-color: rgba(0, 0, 0, 0.1);
+            --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+            
+            /* Accent Colors */
+            --primary: #6366f1;
+            --primary-light: #818cf8;
+            --primary-dark: #4f46e5;
+            --secondary: #8b5cf6;
+            --success: #10b981;
+            --success-light: #34d399;
+            --danger: #dc2626;
+            --danger-light: #ef4444;
+            --warning: #f59e0b;
+            --warning-light: #fbbf24;
+            --info: #3b82f6;
+            --info-light: #60a5fa;
+            
+            /* Logo Renkleri */
+            --logo-dark: #1f315d;
+            --logo-mid: #223961;
+            --logo-light: #2d4a7c;
+            
+            /* Badge Colors */
+            --badge-18: #1f315d;
+            --badge-16: #6366f1;
+            --badge-8: #dc2626;
+            
+            /* Gradients - Logo renklerine göre */
+            --gradient-primary: linear-gradient(135deg, #1f315d 0%, #2d4a7c 100%);
+            --gradient-success: linear-gradient(135deg, #10b981 0%, #34d399 100%);
+            --gradient-danger: linear-gradient(135deg, #dc2626 0%, #ef4444 100%);
+            --gradient-warning: linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%);
+            --gradient-info: linear-gradient(135deg, #1f315d 0%, #3b82f6 100%);
+            --gradient-bg: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            
+            /* Sizing */
+            --header-height: 70px;
+            --footer-height: 50px;
+            --sidebar-width: 280px;
+            --border-radius: 16px;
+            --border-radius-sm: 8px;
+            --border-radius-lg: 24px;
+            
+            /* Transitions */
+            --transition-fast: 0.15s ease;
+            --transition-normal: 0.3s ease;
+            --transition-slow: 0.5s ease;
+        }
+        
+        [data-theme="dark"] {
+            --bg-primary: #0f172a;
+            --bg-secondary: #1e293b;
+            --bg-tertiary: #334155;
+            --bg-card: rgba(30, 41, 59, 0.8);
+            --bg-card-hover: rgba(30, 41, 59, 0.95);
+            --bg-glass: rgba(15, 23, 42, 0.6);
+            --bg-glass-border: rgba(255, 255, 255, 0.1);
+            --bg-input: rgba(30, 41, 59, 0.9);
+            
+            --text-primary: #f1f5f9;
+            --text-secondary: #cbd5e1;
+            --text-muted: #64748b;
+            --text-accent: #94a3b8;
+            
+            --border-color: rgba(255, 255, 255, 0.1);
+            --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.4);
+            --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
+            
+            --gradient-bg: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%);
+        }
+
+        /* ============================================
+           SECTION 2: RESET & BASE STYLES
+           ============================================ */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        html {
+            scroll-behavior: smooth;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--gradient-bg);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+            transition: background var(--transition-normal), color var(--transition-normal);
+        }
+        
+        code, .mono {
+            font-family: 'JetBrains Mono', monospace;
+        }
+        
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: var(--text-muted);
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-secondary);
+        }
+
+        /* ============================================
+           SECTION 3: UTILITY CLASSES
+           ============================================ */
+        .hidden { display: none !important; }
+        .flex { display: flex; }
+        .flex-col { flex-direction: column; }
+        .items-center { align-items: center; }
+        .justify-center { justify-content: center; }
+        .justify-between { justify-content: space-between; }
+        .gap-1 { gap: 0.25rem; }
+        .gap-2 { gap: 0.5rem; }
+        .gap-3 { gap: 0.75rem; }
+        .gap-4 { gap: 1rem; }
+        .gap-6 { gap: 1.5rem; }
+        .gap-8 { gap: 2rem; }
+        .p-2 { padding: 0.5rem; }
+        .p-4 { padding: 1rem; }
+        .p-6 { padding: 1.5rem; }
+        .p-8 { padding: 2rem; }
+        .px-4 { padding-left: 1rem; padding-right: 1rem; }
+        .py-2 { padding-top: 0.5rem; padding-bottom: 0.5rem; }
+        .py-3 { padding-top: 0.75rem; padding-bottom: 0.75rem; }
+        .m-0 { margin: 0; }
+        .mt-2 { margin-top: 0.5rem; }
+        .mt-4 { margin-top: 1rem; }
+        .mb-2 { margin-bottom: 0.5rem; }
+        .mb-4 { margin-bottom: 1rem; }
+        .mb-6 { margin-bottom: 1.5rem; }
+        .ml-auto { margin-left: auto; }
+        .mr-auto { margin-right: auto; }
+        .text-center { text-align: center; }
+        .text-sm { font-size: 0.875rem; }
+        .text-xs { font-size: 0.75rem; }
+        .text-lg { font-size: 1.125rem; }
+        .text-xl { font-size: 1.25rem; }
+        .text-2xl { font-size: 1.5rem; }
+        .text-3xl { font-size: 1.875rem; }
+        .text-4xl { font-size: 2.25rem; }
+        .font-medium { font-weight: 500; }
+        .font-semibold { font-weight: 600; }
+        .font-bold { font-weight: 700; }
+        .w-full { width: 100%; }
+        .h-full { height: 100%; }
+        .rounded { border-radius: var(--border-radius-sm); }
+        .rounded-lg { border-radius: var(--border-radius); }
+        .rounded-xl { border-radius: var(--border-radius-lg); }
+        .rounded-full { border-radius: 9999px; }
+        .overflow-hidden { overflow: hidden; }
+        .overflow-auto { overflow: auto; }
+        .cursor-pointer { cursor: pointer; }
+        .select-none { user-select: none; }
+        .transition { transition: all var(--transition-normal); }
+
+        /* ============================================
+           SECTION 4: GLASS MORPHISM COMPONENTS
+           ============================================ */
+        .glass {
+            background: var(--bg-glass);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--bg-glass-border);
+        }
+        
+        .glass-card {
+            background: var(--bg-card);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow-lg);
+            transition: all var(--transition-normal);
+        }
+        
+        .glass-card:hover {
+            background: var(--bg-card-hover);
+            box-shadow: var(--shadow-xl);
+            transform: translateY(-2px);
+        }
+
+        /* ============================================
+           SECTION 5: BUTTON STYLES
+           ============================================ */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1.5rem;
+            font-size: 0.9375rem;
+            font-weight: 600;
+            border: none;
+            border-radius: var(--border-radius-sm);
+            cursor: pointer;
+            transition: all var(--transition-fast);
+            text-decoration: none;
+            white-space: nowrap;
+        }
+        
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        /* Primary Button - Logo Koyu Mavi */
+        .btn-primary {
+            background: var(--logo-dark);
+            color: white;
+            border: 2px solid var(--logo-dark);
+        }
+        
+        .btn-primary:hover:not(:disabled) {
+            background: white;
+            color: var(--logo-dark);
+            border-color: var(--logo-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(31, 49, 93, 0.3);
+        }
+        
+        /* Success Button - Yeşil */
+        .btn-success {
+            background: var(--success);
+            color: white;
+            border: 2px solid var(--success);
+        }
+        
+        .btn-success:hover:not(:disabled) {
+            background: white;
+            color: var(--success);
+            border-color: var(--success);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(16, 185, 129, 0.3);
+        }
+        
+        /* Danger Button - Kırmızı */
+        .btn-danger {
+            background: var(--danger);
+            color: white;
+            border: 2px solid var(--danger);
+        }
+        
+        .btn-danger:hover:not(:disabled) {
+            background: white;
+            color: var(--danger);
+            border-color: var(--danger);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(220, 38, 38, 0.3);
+        }
+        
+        /* Warning Button - Turuncu */
+        .btn-warning {
+            background: var(--warning);
+            color: white;
+            border: 2px solid var(--warning);
+        }
+        
+        .btn-warning:hover:not(:disabled) {
+            background: white;
+            color: var(--warning);
+            border-color: var(--warning);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(245, 158, 11, 0.3);
+        }
+        
+        /* Secondary Button - Gri/Outline */
+        .btn-secondary {
+            background: transparent;
+            color: var(--logo-dark);
+            border: 2px solid var(--logo-dark);
+        }
+        
+        .btn-secondary:hover:not(:disabled) {
+            background: var(--logo-dark);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(31, 49, 93, 0.2);
+        }
+        
+        .btn-ghost {
+            background: transparent;
+            color: var(--text-secondary);
+            border: 2px solid transparent;
+        }
+        
+        .btn-ghost:hover:not(:disabled) {
+            background: var(--bg-tertiary);
+            color: var(--logo-dark);
+            border-color: var(--logo-dark);
+        }
+        
+        .btn-icon {
+            width: 44px;
+            height: 44px;
+            padding: 0;
+            border-radius: 50%;
+            background: var(--bg-card);
+            border: 2px solid var(--border-color);
+            color: var(--logo-dark);
+            font-size: 1.25rem;
+        }
+        
+        .btn-icon:hover:not(:disabled) {
+            background: var(--logo-dark);
+            color: white;
+            border-color: var(--logo-dark);
+            transform: scale(1.05);
+        }
+        
+        .btn-sm {
+            padding: 0.5rem 1rem;
+            font-size: 0.875rem;
+        }
+        
+        .btn-lg {
+            padding: 1rem 2rem;
+            font-size: 1rem;
+        }
+
+        /* ============================================
+           SECTION 6: INPUT STYLES
+           ============================================ */
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        
+        .input-group label {
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+        }
+        
+        .input {
+            width: 100%;
+            padding: 0.875rem 1rem;
+            font-size: 0.9375rem;
+            font-family: inherit;
+            color: var(--text-primary);
+            background: var(--bg-input);
+            border: 2px solid var(--border-color);
+            border-radius: var(--border-radius-sm);
+            transition: all var(--transition-fast);
+            outline: none;
+        }
+        
+        .input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        }
+        
+        .input:hover:not(:focus) {
+            border-color: var(--text-muted);
+        }
+        
+        .input::placeholder {
+            color: var(--text-muted);
+        }
+        
+        .input-icon-wrapper {
+            position: relative;
+        }
+        
+        .input-icon-wrapper .input {
+            padding-left: 2.75rem;
+        }
+        
+        .input-icon-wrapper i {
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+        }
+        
+        .checkbox-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            cursor: pointer;
+        }
+        
+        .checkbox-wrapper input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            accent-color: var(--primary);
+            cursor: pointer;
+        }
+
+        /* ============================================
+           SECTION 7: BADGE STYLES
+           ============================================ */
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.25rem 0.75rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            border-radius: 9999px;
+            white-space: nowrap;
+        }
+        
+        .badge-primary {
+            background: rgba(99, 102, 241, 0.1);
+            color: var(--primary);
+        }
+        
+        .badge-success {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success);
+        }
+        
+        .badge-danger {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--danger);
+        }
+        
+        .badge-warning {
+            background: rgba(245, 158, 11, 0.1);
+            color: var(--warning);
+        }
+        
+        .badge-18 {
+            background: var(--badge-18);
+            color: white;
+            min-width: 50px;
+        }
+        
+        .badge-16 {
+            background: var(--badge-16);
+            color: white;
+            min-width: 50px;
+        }
+        
+        .badge-8 {
+            background: var(--badge-8);
+            color: white;
+            min-width: 50px;
+        }
+
+        /* ============================================
+           SECTION 8: LAYOUT - APP STRUCTURE
+           ============================================ */
+        #app {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        /* Login Screen */
+        #login-screen {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+            background: var(--gradient-bg);
+        }
+        
+        .login-card {
+            width: 100%;
+            max-width: 420px;
+            padding: 2.5rem;
+        }
+        
+        .login-logo {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        
+        .login-logo .icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+        }
+        
+        .login-logo .logo-img {
+            width: 100px;
+            height: 100px;
+            margin-bottom: 1rem;
+            object-fit: contain;
+        }
+        
+        .login-logo h1 {
+            font-size: 2.5rem;
+            font-weight: 800;
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .login-logo p {
+            color: var(--text-muted);
+            font-size: 0.875rem;
+            margin-top: 0.5rem;
+        }
+        
+        .login-form {
+            display: flex;
+            flex-direction: column;
+            gap: 1.25rem;
+        }
+        
+        .login-error {
+            padding: 0.75rem 1rem;
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            border-radius: var(--border-radius-sm);
+            color: var(--danger);
+            font-size: 0.875rem;
+            text-align: center;
+        }
+        
+        /* Main App Screen */
+        #main-screen {
+            display: none;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+        
+        #main-screen.active {
+            display: flex;
+        }
+
+        /* ============================================
+           SECTION 9: HEADER
+           ============================================ */
+        .header {
+            height: var(--header-height);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 1.5rem;
+            background: var(--bg-card);
+            border-bottom: 1px solid var(--border-color);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            backdrop-filter: blur(20px);
+        }
+        
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .header-logo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        
+        .header-logo .icon {
+            font-size: 2rem;
+        }
+        
+        .header-logo .logo-img {
+            width: 36px;
+            height: 36px;
+            object-fit: contain;
+        }
+        
+        .header-logo h1 {
+            font-size: 1.5rem;
+            font-weight: 800;
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .header-nav {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-left: 2rem;
+        }
+        
+        .nav-btn {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: transparent;
+            border: 2px solid transparent;
+            border-radius: var(--border-radius-sm);
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all var(--transition-fast);
+        }
+        
+        .nav-btn:hover {
+            background: transparent;
+            color: var(--logo-dark);
+            border-color: var(--logo-dark);
+        }
+        
+        .nav-btn.active {
+            background: var(--logo-dark);
+            color: white;
+            border-color: var(--logo-dark);
+        }
+        
+        .nav-btn.active:hover {
+            background: white;
+            color: var(--logo-dark);
+            border-color: var(--logo-dark);
+        }
+        
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        
+        .header-user {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.5rem 1rem;
+            background: var(--bg-tertiary);
+            border-radius: var(--border-radius-sm);
+        }
+        
+        .header-user-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: var(--gradient-primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+        }
+        
+        .header-user-name {
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+
+        /* ============================================
+           SECTION 10: MAIN CONTENT
+           ============================================ */
+        .main-content {
+            flex: 1;
+            padding: 2rem;
+            overflow-y: auto;
+        }
+        
+        .content-wrapper {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        /* Page Header */
+        .page-header {
+            margin-bottom: 2rem;
+        }
+        
+        .page-title {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+        }
+        
+        .page-subtitle {
+            color: var(--text-secondary);
+        }
+
+        /* ============================================
+           SECTION 11: DASHBOARD STATS
+           ============================================ */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .stat-card {
+            padding: 1.5rem;
+            display: flex;
+            align-items: flex-start;
+            gap: 1rem;
+        }
+        
+        .stat-icon {
+            width: 56px;
+            height: 56px;
+            border-radius: var(--border-radius-sm);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            flex-shrink: 0;
+        }
+        
+        .stat-icon.primary { background: rgba(99, 102, 241, 0.1); color: var(--primary); }
+        .stat-icon.success { background: rgba(16, 185, 129, 0.1); color: var(--success); }
+        .stat-icon.warning { background: rgba(245, 158, 11, 0.1); color: var(--warning); }
+        .stat-icon.danger { background: rgba(239, 68, 68, 0.1); color: var(--danger); }
+        .stat-icon.info { background: rgba(59, 130, 246, 0.1); color: var(--info); }
+        
+        .stat-content {
+            flex: 1;
+        }
+        
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            line-height: 1;
+        }
+        
+        .stat-label {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            margin-top: 0.25rem;
+        }
+        
+        .stat-change {
+            font-size: 0.75rem;
+            margin-top: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+        
+        .stat-change.positive { color: var(--success); }
+        .stat-change.negative { color: var(--danger); }
+
+        /* ============================================
+           SECTION 12: FILE DROP ZONE
+           ============================================ */
+        .drop-zone-container {
+            margin-bottom: 2rem;
+        }
+        
+        .drop-zone {
+            border: 2px dashed var(--border-color);
+            border-radius: var(--border-radius-lg);
+            padding: 3rem 2rem;
+            text-align: center;
+            background: var(--bg-card);
+            transition: all var(--transition-normal);
+            cursor: pointer;
+        }
+        
+        .drop-zone:hover, .drop-zone.drag-over {
+            border-color: var(--primary);
+            background: rgba(99, 102, 241, 0.05);
+        }
+        
+        .drop-zone.has-file {
+            border-color: var(--success);
+            border-style: solid;
+            background: rgba(16, 185, 129, 0.05);
+        }
+        
+        .drop-zone-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+        }
+        
+        .drop-zone-text {
+            font-size: 1.125rem;
+            font-weight: 500;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+        }
+        
+        .drop-zone-hint {
+            color: var(--text-muted);
+            font-size: 0.875rem;
+        }
+        
+        .drop-zone-file {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem;
+            margin-top: 1rem;
+            padding: 0.75rem 1.5rem;
+            background: var(--bg-tertiary);
+            border-radius: var(--border-radius-sm);
+            font-weight: 500;
+        }
+        
+        .drop-zone-file .remove-file {
+            color: var(--danger);
+            cursor: pointer;
+            padding: 0.25rem;
+        }
+        
+        .drop-zone-file .remove-file:hover {
+            opacity: 0.7;
+        }
+
+        /* File List Container */
+        .file-list-container {
+            margin-top: 1rem;
+        }
+        
+        .file-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        
+        .file-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem 1rem;
+            background: var(--bg-tertiary);
+            border-radius: var(--border-radius-sm);
+            transition: all var(--transition-fast);
+        }
+        
+        .file-item:hover {
+            background: var(--bg-secondary);
+        }
+        
+        .file-item .file-name {
+            flex: 1;
+            font-weight: 500;
+            color: var(--text-primary);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        
+        .file-item .btn-remove-file {
+            color: var(--text-muted);
+            padding: 0.25rem;
+            border-radius: var(--border-radius-sm);
+        }
+        
+        .file-item .btn-remove-file:hover {
+            color: var(--danger);
+            background: rgba(239, 68, 68, 0.1);
+        }
+
+        /* ============================================
+           SECTION 13: ACTION BUTTONS
+           ============================================ */
+        .action-buttons {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+        
+        .action-buttons .btn {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        /* ============================================
+           SECTION 14: TABLES
+           ============================================ */
+        .table-container {
+            background: var(--bg-card);
+            border-radius: var(--border-radius);
+            border: 1px solid var(--border-color);
+            overflow: hidden;
+        }
+        
+        .table-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .table-title {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+        
+        .table-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+        
+        .table-wrapper {
+            overflow-x: auto;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        th, td {
+            padding: 1rem 1.5rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        th {
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+            background: var(--bg-secondary);
+        }
+        
+        tr:last-child td {
+            border-bottom: none;
+        }
+        
+        tr:hover td {
+            background: var(--bg-secondary);
+        }
+        
+        .table-empty {
+            padding: 3rem;
+            text-align: center;
+            color: var(--text-muted);
+        }
+
+        /* ============================================
+           SECTION 15: MODALS
+           ============================================ */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(4px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all var(--transition-normal);
+            padding: 2rem;
+        }
+        
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+        
+        .modal {
+            background: var(--bg-card);
+            border-radius: var(--border-radius-lg);
+            box-shadow: var(--shadow-xl);
+            width: 100%;
+            max-height: 90vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            transform: scale(0.9) translateY(20px);
+            transition: all var(--transition-normal);
+        }
+        
+        .modal-overlay.active .modal {
+            transform: scale(1) translateY(0);
+        }
+        
+        .modal-sm { max-width: 400px; }
+        .modal-md { max-width: 600px; }
+        .modal-lg { max-width: 800px; }
+        .modal-xl { max-width: 1000px; }
+        
+        .modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1.25rem 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .modal-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        
+        .modal-close {
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            font-size: 1.25rem;
+            cursor: pointer;
+            transition: all var(--transition-fast);
+        }
+        
+        .modal-close:hover {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+        }
+        
+        .modal-body {
+            padding: 1.5rem;
+            overflow-y: auto;
+            flex: 1;
+        }
+        
+        .modal-footer {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 0.75rem;
+            padding: 1.25rem 1.5rem;
+            border-top: 1px solid var(--border-color);
+        }
+
+        /* ============================================
+           SECTION 16: TABS
+           ============================================ */
+        .tabs {
+            display: flex;
+            gap: 0.25rem;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 1.5rem;
+        }
+        
+        .tab-btn {
+            padding: 0.75rem 1.5rem;
+            background: transparent;
+            border: none;
+            border-bottom: 2px solid transparent;
+            color: var(--text-secondary);
+            font-size: 0.9375rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all var(--transition-fast);
+        }
+        
+        .tab-btn:hover {
+            color: var(--text-primary);
+            background: var(--bg-secondary);
+        }
+        
+        .tab-btn.active {
+            color: var(--primary);
+            border-bottom-color: var(--primary);
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+
+        /* ============================================
+           SECTION 17: PROGRESS BAR
+           ============================================ */
+        .progress-container {
+            margin: 1.5rem 0;
+        }
+        
+        .progress-bar {
+            height: 8px;
+            background: var(--bg-tertiary);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: var(--gradient-primary);
+            border-radius: 4px;
+            transition: width var(--transition-normal);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .progress-fill::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(
+                90deg,
+                transparent,
+                rgba(255, 255, 255, 0.3),
+                transparent
+            );
+            animation: shimmer 1.5s infinite;
+        }
+        
+        @keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+        
+        .progress-text {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 0.5rem;
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+
+        /* ============================================
+           SECTION 18: TOAST NOTIFICATIONS
+           ============================================ */
+        .toast-container {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            z-index: 2000;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+        
+        .toast {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 1rem 1.5rem;
+            background: var(--bg-card);
+            border-radius: var(--border-radius-sm);
+            box-shadow: var(--shadow-lg);
+            border-left: 4px solid var(--text-muted);
+            min-width: 300px;
+            max-width: 450px;
+            animation: slideIn 0.3s ease;
+        }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(100%);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+        
+        .toast.success { border-left-color: var(--success); }
+        .toast.error { border-left-color: var(--danger); }
+        .toast.warning { border-left-color: var(--warning); }
+        .toast.info { border-left-color: var(--info); }
+        
+        .toast-icon {
+            font-size: 1.25rem;
+            flex-shrink: 0;
+        }
+        
+        .toast.success .toast-icon { color: var(--success); }
+        .toast.error .toast-icon { color: var(--danger); }
+        .toast.warning .toast-icon { color: var(--warning); }
+        .toast.info .toast-icon { color: var(--info); }
+        
+        .toast-content {
+            flex: 1;
+        }
+        
+        .toast-title {
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+        
+        .toast-message {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+        
+        .toast-close {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            padding: 0.25rem;
+            font-size: 1rem;
+        }
+
+        /* ============================================
+           SECTION 19: THICKNESS SELECTION
+           ============================================ */
+        .thickness-selection {
+            display: flex;
+            gap: 1.5rem;
+            justify-content: center;
+            margin: 2rem 0;
+        }
+        
+        .thickness-btn {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 1.5rem;
+            background: var(--bg-card);
+            border: 2px solid var(--border-color);
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            transition: all var(--transition-normal);
+            min-width: 120px;
+        }
+        
+        .thickness-btn:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-lg);
+        }
+        
+        .thickness-btn .circle {
+            width: 72px;
+            height: 72px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: white;
+        }
+        
+        .thickness-btn.t-18 .circle { background: var(--badge-18); }
+        .thickness-btn.t-16 .circle { background: var(--badge-16); }
+        .thickness-btn.t-8 .circle { background: var(--badge-8); }
+        
+        .thickness-btn:hover.t-18 { border-color: var(--badge-18); }
+        .thickness-btn:hover.t-16 { border-color: var(--badge-16); }
+        .thickness-btn:hover.t-8 { border-color: var(--badge-8); }
+        
+        .thickness-btn .label {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            text-align: center;
+        }
+
+        /* ============================================
+           SECTION 20: SETTINGS FORM
+           ============================================ */
+        .settings-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1rem;
+        }
+        
+        .settings-group {
+            padding: 1.5rem;
+            background: var(--bg-secondary);
+            border-radius: var(--border-radius-sm);
+        }
+        
+        .settings-group-title {
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+            margin-bottom: 1rem;
+        }
+        
+        .setting-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .setting-row:last-child {
+            border-bottom: none;
+        }
+        
+        .setting-label {
+            font-size: 0.9375rem;
+            color: var(--text-primary);
+        }
+        
+        .setting-input {
+            width: 100px;
+            padding: 0.5rem;
+            text-align: center;
+        }
+
+        /* ============================================
+           SECTION 21: MATERIALS LIST
+           ============================================ */
+        .materials-grid {
+            display: grid;
+            gap: 0.5rem;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        
+        .material-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.875rem 1rem;
+            background: var(--bg-secondary);
+            border-radius: var(--border-radius-sm);
+            transition: all var(--transition-fast);
+        }
+        
+        .material-item:hover {
+            background: var(--bg-tertiary);
+        }
+        
+        .material-code {
+            font-weight: 500;
+            font-family: 'JetBrains Mono', monospace;
+        }
+        
+        .material-actions {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        /* ============================================
+           SECTION 22: HISTORY LIST
+           ============================================ */
+        .history-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+        
+        .history-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem;
+            background: var(--bg-secondary);
+            border-radius: var(--border-radius-sm);
+            transition: all var(--transition-fast);
+        }
+        
+        .history-item:hover {
+            background: var(--bg-tertiary);
+        }
+        
+        .history-info {
+            flex: 1;
+            min-width: 0;
+        }
+        
+        .history-job-no {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+        
+        .history-file {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .btn-delete-job {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 36px;
+            height: 36px;
+            border: none;
+            border-radius: 50%;
+            background: transparent;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            flex-shrink: 0;
+        }
+        
+        .btn-delete-job:hover {
+            background: var(--danger);
+            color: white;
+        }
+        
+        .history-meta {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+            flex-shrink: 0;
+        }
+        
+        .history-date, .history-parts {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            gap: 0.375rem;
+        }
+
+        /* ============================================
+           SECTION 22B: MODULE DEPTH LIST
+           ============================================ */
+        .module-depth-list {
+            max-height: 400px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        
+        .module-depth-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.875rem 1rem;
+            background: var(--bg-secondary);
+            border-radius: var(--border-radius-sm);
+            transition: all var(--transition-fast);
+        }
+        
+        .module-depth-item:hover {
+            background: var(--bg-tertiary);
+        }
+        
+        .module-depth-item.has-custom {
+            background: rgba(245, 158, 11, 0.1);
+            border: 1px solid var(--warning);
+        }
+        
+        .module-poz {
+            font-weight: 700;
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--primary);
+            min-width: 50px;
+        }
+        
+        .module-info {
+            flex: 1;
+            min-width: 0;
+        }
+        
+        .module-name {
+            font-weight: 500;
+            color: var(--text-primary);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .module-type {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+        
+        .module-inputs {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+        }
+        
+        .module-input-group {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.25rem;
+        }
+        
+        .module-input-label {
+            font-size: 0.65rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .module-depth-input {
+            width: 70px;
+            text-align: center;
+            padding: 0.375rem 0.5rem;
+            font-size: 0.85rem;
+        }
+        
+        .module-default {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            min-width: 70px;
+            text-align: center;
+        }
+
+        /* ============================================
+           SECTION 23: FOOTER
+           ============================================ */
+        .footer {
+            height: var(--footer-height);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 1.5rem;
+            background: var(--bg-card);
+            border-top: 1px solid var(--border-color);
+        }
+        
+        .footer-left {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        
+        .status-indicator {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: var(--success);
+        }
+        
+        .status-indicator.processing {
+            animation: pulse 1s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        .status-text {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+        
+        .footer-right {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        /* ============================================
+           SECTION 23B: PART TYPES GRID
+           ============================================ */
+        .part-types-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 0.75rem;
+            max-height: 400px;
+            overflow-y: auto;
+            padding: 0.5rem;
+        }
+        
+        .part-type-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.875rem 1rem;
+            background: var(--bg-card);
+            border: 2px solid var(--border-color);
+            border-radius: var(--border-radius-sm);
+            cursor: pointer;
+            transition: all var(--transition-fast);
+        }
+        
+        .part-type-item:hover {
+            border-color: var(--primary-light);
+            background: var(--bg-card-hover);
+        }
+        
+        .part-type-item.selected {
+            border-color: var(--primary);
+            background: rgba(99, 102, 241, 0.1);
+        }
+        
+        .part-type-item input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            accent-color: var(--primary);
+            cursor: pointer;
+        }
+        
+        .part-type-info {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+        
+        .part-type-name {
+            font-weight: 500;
+            font-size: 0.875rem;
+            color: var(--text-primary);
+        }
+        
+        .part-type-count {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+        
+        .part-type-badge {
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            font-weight: 600;
+        }
+        
+        .part-type-badge.body {
+            background: rgba(59, 130, 246, 0.15);
+            color: var(--badge-18);
+        }
+        
+        .part-type-badge.thin {
+            background: rgba(239, 68, 68, 0.15);
+            color: var(--badge-8);
+        }
+
+        /* ============================================
+           SECTION 23B: ALERT STYLES
+           ============================================ */
+        .alert {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 1rem;
+            border-radius: var(--border-radius-sm);
+            font-size: 0.875rem;
+        }
+        
+        .alert-info {
+            background: rgba(59, 130, 246, 0.1);
+            color: var(--info);
+            border: 1px solid rgba(59, 130, 246, 0.2);
+        }
+        
+        .alert-warning {
+            background: rgba(245, 158, 11, 0.1);
+            color: var(--warning);
+            border: 1px solid rgba(245, 158, 11, 0.2);
+        }
+
+        /* ============================================
+           SECTION 23C: PART TYPE DROPDOWN
+           ============================================ */
+        .part-type-select {
+            padding: 0.375rem 0.5rem;
+            font-size: 0.8rem;
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius-sm);
+            background: var(--bg-input);
+            color: var(--text-primary);
+            cursor: pointer;
+            min-width: 140px;
+            transition: all var(--transition-fast);
+        }
+        
+        .part-type-select:hover {
+            border-color: var(--primary);
+        }
+        
+        .part-type-select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        }
+        
+        .part-type-select.changed {
+            background: rgba(16, 185, 129, 0.1);
+            border-color: var(--success);
+        }
+        
+        /* Editable row highlight */
+        tr.edited {
+            background: rgba(16, 185, 129, 0.05) !important;
+        }
+        
+        tr.edited td {
+            background: transparent !important;
+        }
+        
+        /* Kanallı Toggle Butonu */
+        .kanalli-toggle {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: var(--bg-tertiary);
+            color: var(--text-muted);
+            font-size: 0.75rem;
+            font-weight: 700;
+            margin-left: 0.5rem;
+            flex-shrink: 0;
+            cursor: pointer;
+            border: 2px solid var(--border-color);
+            transition: all 0.2s ease;
+            user-select: none;
+        }
+        
+        .kanalli-toggle:hover {
+            transform: scale(1.1);
+        }
+        
+        .kanalli-toggle.active {
+            background: var(--warning);
+            color: white;
+            border-color: var(--warning);
+        }
+        
+        .kanalli-toggle.active:hover {
+            background: #e0a800;
+            border-color: #e0a800;
+        }
+        
+        .part-type-cell {
+            display: flex;
+            align-items: center;
+        }
+
+        /* ============================================
+           SECTION 24: RESPONSIVE
+           ============================================ */
+        @media (max-width: 768px) {
+            .header-nav {
+                display: none;
+            }
+            
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .action-buttons {
+                flex-direction: column;
+            }
+            
+            .action-buttons .btn {
+                width: 100%;
+            }
+            
+            .thickness-selection {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .modal {
+                margin: 1rem;
+            }
+        }
+
+        /* ============================================
+           SECTION 25: PRINT STYLES
+           ============================================ */
+        @media print {
+            .header, .footer, .action-buttons, .modal-overlay {
+                display: none !important;
+            }
+            
+            body {
+                background: white;
+                color: black;
+            }
+            
+            .glass-card {
+                box-shadow: none;
+                border: 1px solid #ddd;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- ============================================
+         APP CONTAINER
+         ============================================ -->
+    <div id="app">
+        <!-- ============================================
+             LOGIN SCREEN
+             ============================================ -->
+        <div id="login-screen">
+            <div class="login-card glass-card">
+                <div class="login-logo">
+                    <img src="CORE_LOGO.png" alt="CORE Logo" class="logo-img">
+                    <h1>CORE</h1>
+                    <p>Cut Optimization & Reporting Engine</p>
+                </div>
+                
+                <form class="login-form" id="login-form">
+                    <div id="login-error" class="login-error hidden"></div>
+                    
+                    <div class="input-group">
+                        <label for="username">Kullanıcı Adı</label>
+                        <div class="input-icon-wrapper">
+                            <i class="fas fa-user"></i>
+                            <input type="text" id="username" class="input" placeholder="Kullanıcı adınızı girin" autocomplete="username">
+                        </div>
+                    </div>
+                    
+                    <div class="input-group">
+                        <label for="password">Şifre</label>
+                        <div class="input-icon-wrapper">
+                            <i class="fas fa-lock"></i>
+                            <input type="password" id="password" class="input" placeholder="Şifrenizi girin" autocomplete="current-password">
+                        </div>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary btn-lg w-full">
+                        <i class="fas fa-sign-in-alt"></i>
+                        <span data-i18n="login">Giriş Yap</span>
+                    </button>
+                </form>
+                
+                <div class="text-center mt-4">
+                    <span class="text-xs text-muted">v3.5</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================
+             MAIN SCREEN
+             ============================================ -->
+        <div id="main-screen">
+            <!-- Header -->
+            <header class="header">
+                <div class="header-left">
+                    <div class="header-logo">
+                        <img src="CORE_LOGO.png" alt="CORE" class="logo-img">
+                        <h1>CORE</h1>
+                    </div>
+                    
+                    <nav class="header-nav">
+                        <button class="nav-btn active" data-page="dashboard">
+                            <i class="fas fa-home"></i>
+                            <span data-i18n="dashboard">Ana Sayfa</span>
+                        </button>
+                        <button class="nav-btn" data-page="history">
+                            <i class="fas fa-history"></i>
+                            <span data-i18n="history">Geçmiş</span>
+                        </button>
+                        <button class="nav-btn" data-page="materials">
+                            <i class="fas fa-cubes"></i>
+                            <span data-i18n="materials">Malzemeler</span>
+                        </button>
+                    </nav>
+                </div>
+                
+                <div class="header-right">
+                    <!-- Theme Toggle -->
+                    <button class="btn-icon" id="theme-toggle" title="Tema Değiştir">
+                        <i class="fas fa-moon"></i>
+                    </button>
+                    
+                    <!-- Language Toggle -->
+                    <button class="btn-icon" id="lang-toggle" title="Dil Değiştir">
+                        <span>TR</span>
+                    </button>
+                    
+                    <!-- Settings -->
+                    <button class="btn-icon" id="settings-btn" title="Ayarlar">
+                        <i class="fas fa-cog"></i>
+                    </button>
+                    
+                    <!-- User Menu -->
+                    <div class="header-user">
+                        <div class="header-user-avatar" id="user-avatar">A</div>
+                        <span class="header-user-name" id="user-name">Admin</span>
+                    </div>
+                    
+                    <!-- Logout -->
+                    <button class="btn-icon" id="logout-btn" title="Çıkış Yap">
+                        <i class="fas fa-sign-out-alt"></i>
+                    </button>
+                </div>
+            </header>
+
+            <!-- Main Content -->
+            <main class="main-content">
+                <div class="content-wrapper">
+                    <!-- ==================== DASHBOARD PAGE ==================== -->
+                    <div id="page-dashboard" class="page active">
+                        <div class="page-header">
+                            <h2 class="page-title">
+                                <span data-i18n="welcome">Hoş Geldiniz</span>, 
+                                <span id="welcome-name">Admin</span>!
+                            </h2>
+                            <p class="page-subtitle" data-i18n="dashboard_subtitle">Kesim listesi oluşturmak için dosya yükleyin</p>
+                        </div>
+                        
+                        <!-- Stats Grid -->
+                        <div class="stats-grid">
+                            <div class="stat-card glass-card">
+                                <div class="stat-icon primary">
+                                    <i class="fas fa-file-excel"></i>
+                                </div>
+                                <div class="stat-content">
+                                    <div class="stat-value" id="stat-jobs">0</div>
+                                    <div class="stat-label" data-i18n="total_jobs">Toplam İş</div>
+                                </div>
+                            </div>
+                            
+                            <div class="stat-card glass-card">
+                                <div class="stat-icon success">
+                                    <i class="fas fa-puzzle-piece"></i>
+                                </div>
+                                <div class="stat-content">
+                                    <div class="stat-value" id="stat-parts">0</div>
+                                    <div class="stat-label" data-i18n="total_parts">Toplam Parça</div>
+                                </div>
+                            </div>
+                            
+                            <div class="stat-card glass-card">
+                                <div class="stat-icon warning">
+                                    <i class="fas fa-cubes"></i>
+                                </div>
+                                <div class="stat-content">
+                                    <div class="stat-value" id="stat-materials">0</div>
+                                    <div class="stat-label" data-i18n="saved_materials">Kayıtlı Malzeme</div>
+                                </div>
+                            </div>
+                            
+                            <div class="stat-card glass-card">
+                                <div class="stat-icon info">
+                                    <i class="fas fa-calendar-day"></i>
+                                </div>
+                                <div class="stat-content">
+                                    <div class="stat-value" id="stat-today">0</div>
+                                    <div class="stat-label" data-i18n="today_jobs">Bugünkü İş</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- File Drop Zone -->
+                        <div class="drop-zone-container">
+                            <div class="drop-zone" id="drop-zone">
+                                <div class="drop-zone-icon">📁</div>
+                                <div class="drop-zone-text" data-i18n="drop_file">Dosyayı buraya sürükleyin veya tıklayın</div>
+                                <div class="drop-zone-hint" data-i18n="supported_formats">Desteklenen: .xlsx, .xls, .csv</div>
+                                <div class="drop-zone-file hidden" id="file-info">
+                                    <i class="fas fa-file-excel"></i>
+                                    <span id="file-name"></span>
+                                    <span class="remove-file" id="remove-file">
+                                        <i class="fas fa-times"></i>
+                                    </span>
+                                </div>
+                            </div>
+                            <input type="file" id="file-input" accept=".xlsx,.xls,.csv" hidden>
+                        </div>
+                        
+                        <!-- Progress Bar -->
+                        <div class="progress-container hidden" id="progress-container">
+                            <div class="progress-bar">
+                                <div class="progress-fill" id="progress-fill" style="width: 0%"></div>
+                            </div>
+                            <div class="progress-text">
+                                <span id="progress-status">İşleniyor...</span>
+                                <span id="progress-percent">0%</span>
+                            </div>
+                        </div>
+                        
+                        <!-- Action Buttons -->
+                        <div class="action-buttons">
+                            <button class="btn btn-warning btn-lg" id="btn-module-depth" disabled onclick="openModuleDepthModal()">
+                                <i class="fas fa-cube"></i>
+                                <span>Özel Modül</span>
+                            </button>
+                            <button class="btn btn-warning btn-lg" id="btn-analyze" disabled>
+                                <i class="fas fa-play"></i>
+                                <span data-i18n="analyze">Analiz Et</span>
+                            </button>
+                            <button class="btn btn-success btn-lg" id="btn-quick-analyze" disabled>
+                                <i class="fas fa-bolt"></i>
+                                <span>Hızlı Analiz</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- ==================== HISTORY PAGE ==================== -->
+                    <div id="page-history" class="page hidden">
+                        <div class="page-header flex justify-between items-center">
+                            <div>
+                                <h2 class="page-title" data-i18n="job_history">İş Geçmişi</h2>
+                                <p class="page-subtitle" data-i18n="history_subtitle">Geçmiş işlerinizi görüntüleyin ve yönetin</p>
+                            </div>
+                        </div>
+                        
+                        <!-- Search -->
+                        <div class="input-group mb-4">
+                            <div class="input-icon-wrapper">
+                                <i class="fas fa-search"></i>
+                                <input type="text" id="history-search" class="input" placeholder="İş numarası veya dosya ara...">
+                            </div>
+                        </div>
+                        
+                        <!-- History List -->
+                        <div class="history-list" id="history-list">
+                            <div class="table-empty">
+                                <i class="fas fa-inbox fa-3x mb-4" style="color: var(--text-muted)"></i>
+                                <p data-i18n="no_history">Henüz işlenmiş dosya bulunmuyor</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ==================== MATERIALS PAGE ==================== -->
+                    <div id="page-materials" class="page hidden">
+                        <div class="page-header flex justify-between items-center">
+                            <div>
+                                <h2 class="page-title" data-i18n="material_memory">Malzeme Hafızası</h2>
+                                <p class="page-subtitle" data-i18n="materials_subtitle">Kayıtlı malzeme kalınlıklarını yönetin</p>
+                            </div>
+                            <div class="flex gap-2">
+                                <button class="btn btn-danger" id="btn-clear-materials">
+                                    <i class="fas fa-trash"></i>
+                                    <span data-i18n="clear_all">Tümünü Sil</span>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- Search -->
+                        <div class="input-group mb-4">
+                            <div class="input-icon-wrapper">
+                                <i class="fas fa-search"></i>
+                                <input type="text" id="material-search" class="input" placeholder="Malzeme kodu ara...">
+                            </div>
+                        </div>
+                        
+                        <!-- Materials Stats -->
+                        <div class="stats-grid mb-4">
+                            <div class="stat-card glass-card">
+                                <div class="stat-icon" style="background: rgba(59, 130, 246, 0.1); color: var(--badge-18);">
+                                    <span class="font-bold">18</span>
+                                </div>
+                                <div class="stat-content">
+                                    <div class="stat-value" id="count-18">0</div>
+                                    <div class="stat-label">18mm Malzeme</div>
+                                </div>
+                            </div>
+                            <div class="stat-card glass-card">
+                                <div class="stat-icon" style="background: rgba(139, 92, 246, 0.1); color: var(--badge-16);">
+                                    <span class="font-bold">16</span>
+                                </div>
+                                <div class="stat-content">
+                                    <div class="stat-value" id="count-16">0</div>
+                                    <div class="stat-label">16mm Malzeme</div>
+                                </div>
+                            </div>
+                            <div class="stat-card glass-card">
+                                <div class="stat-icon" style="background: rgba(239, 68, 68, 0.1); color: var(--badge-8);">
+                                    <span class="font-bold">8</span>
+                                </div>
+                                <div class="stat-content">
+                                    <div class="stat-value" id="count-8">0</div>
+                                    <div class="stat-label">8mm Malzeme</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Materials List -->
+                        <div class="materials-grid" id="materials-list">
+                            <div class="table-empty">
+                                <i class="fas fa-cubes fa-3x mb-4" style="color: var(--text-muted)"></i>
+                                <p data-i18n="no_materials">Henüz kayıtlı malzeme bulunmuyor</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+
+            <!-- Footer -->
+            <footer class="footer">
+                <div class="footer-left">
+                    <div class="status-indicator" id="status-indicator"></div>
+                    <span class="status-text" id="status-text">Hazır</span>
+                </div>
+                <div class="footer-right">
+                    CORE v3.5 | © 2025
+                </div>
+            </footer>
+        </div>
+    </div>
+
+    <!-- ============================================
+         MODALS
+         ============================================ -->
+    
+    <!-- Module Depth Modal -->
+    <div class="modal-overlay" id="modal-module-depth">
+        <div class="modal modal-lg">
+            <div class="modal-header">
+                <h3 class="modal-title">
+                    <i class="fas fa-cube"></i>
+                    <span>Özel Modül Ayarları</span>
+                </h3>
+                <button class="modal-close" data-close-modal>
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p class="text-muted mb-4">Standart ölçülerden farklı modüller için özel değerler girin. Boş bırakılan modüller standart değerleri kullanır.</p>
+                
+                <div id="module-list" class="module-depth-list">
+                    <div class="table-empty">
+                        <i class="fas fa-cube fa-3x mb-4" style="color: var(--text-muted)"></i>
+                        <p>Önce bir dosya yükleyin</p>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" data-close-modal>İptal</button>
+                <button class="btn btn-warning" onclick="clearCustomDepths()">
+                    <i class="fas fa-undo"></i> Sıfırla
+                </button>
+                <button class="btn btn-warning" onclick="applyModuleDepths()">
+                    <i class="fas fa-check"></i> Uygula
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div class="modal-overlay" id="modal-settings">
+        <div class="modal modal-lg">
+            <div class="modal-header">
+                <h3 class="modal-title">
+                    <i class="fas fa-cog"></i>
+                    <span data-i18n="settings">Ayarlar</span>
+                </h3>
+                <button class="modal-close" data-close-modal>
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="tabs">
+                    <button class="tab-btn active" data-tab="settings-measurements">
+                        <i class="fas fa-ruler"></i> Ölçüler
+                    </button>
+                    <button class="tab-btn" data-tab="settings-users" id="tab-users">
+                        <i class="fas fa-users"></i> Kullanıcılar
+                    </button>
+                    <button class="tab-btn" data-tab="settings-backup">
+                        <i class="fas fa-database"></i> Yedekleme
+                    </button>
+                    <button class="tab-btn" data-tab="settings-about">
+                        <i class="fas fa-info-circle"></i> Hakkında
+                    </button>
+                </div>
+                
+                <!-- Measurements Tab -->
+                <div class="tab-content active" id="settings-measurements">
+                    <div class="settings-grid">
+                        <div class="settings-group">
+                            <div class="settings-group-title">Alt Dolap Ölçüleri</div>
+                            <div class="setting-row">
+                                <span class="setting-label">Yükseklik (mm)</span>
+                                <input type="number" class="input setting-input" id="set-height" value="720">
+                            </div>
+                            <div class="setting-row">
+                                <span class="setting-label">Derinlik (mm)</span>
+                                <input type="number" class="input setting-input" id="set-depth" value="580">
+                            </div>
+                        </div>
+                        
+                        <div class="settings-group">
+                            <div class="settings-group-title">Üst Dolap Ölçüleri</div>
+                            <div class="setting-row">
+                                <span class="setting-label">Yükseklik (mm)</span>
+                                <input type="number" class="input setting-input" id="set-ust-height" value="720">
+                            </div>
+                            <div class="setting-row">
+                                <span class="setting-label">Derinlik (mm)</span>
+                                <input type="number" class="input setting-input" id="set-ust-depth" value="330">
+                            </div>
+                        </div>
+                        
+                        <div class="settings-group">
+                            <div class="settings-group-title">Boy Dolap</div>
+                            <div class="setting-row">
+                                <span class="setting-label">Yükseklik (mm)</span>
+                                <input type="number" class="input setting-input" id="set-boy-height" value="2100">
+                            </div>
+                            <div class="setting-row">
+                                <span class="setting-label">Derinlik (mm)</span>
+                                <input type="number" class="input setting-input" id="set-boy-depth" value="580">
+                            </div>
+                        </div>
+                        
+                        <div class="settings-group">
+                            <div class="settings-group-title">Düşüm Değerleri</div>
+                            <div class="setting-row">
+                                <span class="setting-label">Alt-Üst Düşümü (mm)</span>
+                                <input type="number" class="input setting-input" id="set-yan-dusum" value="36">
+                            </div>
+                            <div class="setting-row">
+                                <span class="setting-label">Sabit Derinlik Düşümü (mm)</span>
+                                <input type="number" class="input setting-input" id="set-sabit-dusum" value="23">
+                            </div>
+                            <div class="setting-row">
+                                <span class="setting-label">Raf Genişlik Düşümü (mm)</span>
+                                <input type="number" class="input setting-input" id="set-raf-gen" value="37">
+                            </div>
+                            <div class="setting-row">
+                                <span class="setting-label">Raf Derinlik Alt (mm)</span>
+                                <input type="number" class="input setting-input" id="set-raf-alt" value="50">
+                            </div>
+                            <div class="setting-row">
+                                <span class="setting-label">Raf Derinlik Üst (mm)</span>
+                                <input type="number" class="input setting-input" id="set-raf-ust" value="40">
+                            </div>
+                        </div>
+                        
+                        <div class="settings-group">
+                            <div class="settings-group-title">Diğer Ayarlar</div>
+                            <div class="setting-row">
+                                <span class="setting-label">Tolerans (mm)</span>
+                                <input type="number" class="input setting-input" id="set-tolerans" value="5">
+                            </div>
+                            <div class="setting-row">
+                                <span class="setting-label">Arkalık Düşümü (mm)</span>
+                                <input type="number" class="input setting-input" id="set-arkalik" value="18">
+                            </div>
+                            <div class="setting-row">
+                                <span class="setting-label">Arkalık İçerde Düşümü (mm)</span>
+                                <input type="number" class="input setting-input" id="set-arkalik-icerde" value="37">
+                            </div>
+                            <div class="setting-row">
+                                <span class="setting-label">İnce Malzeme Max (mm)</span>
+                                <input type="number" class="input setting-input" id="set-ince-max" value="8">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Users Tab -->
+                <div class="tab-content" id="settings-users">
+                    <div class="glass-card p-4 mb-4">
+                        <h4 class="font-semibold mb-4">Yeni Kullanıcı Ekle</h4>
+                        <div class="flex gap-4 flex-wrap">
+                            <input type="text" class="input" id="new-username" placeholder="Kullanıcı adı" style="flex: 1; min-width: 150px;">
+                            <input type="text" class="input" id="new-display" placeholder="Görünen isim" style="flex: 1; min-width: 150px;">
+                            <input type="password" class="input" id="new-password" placeholder="Şifre" style="flex: 1; min-width: 150px;">
+                            <label class="checkbox-wrapper">
+                                <input type="checkbox" id="new-admin">
+                                <span>Admin</span>
+                            </label>
+                            <button class="btn btn-success" id="btn-add-user">
+                                <i class="fas fa-plus"></i> Ekle
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="table-container">
+                        <div class="table-wrapper">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Kullanıcı Adı</th>
+                                        <th>Görünen İsim</th>
+                                        <th>Yetki</th>
+                                        <th>İşlem</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="users-table">
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Backup Tab -->
+                <div class="tab-content" id="settings-backup">
+                    <div class="settings-grid">
+                        <div class="glass-card p-6 text-center">
+                            <i class="fas fa-download fa-3x mb-4" style="color: var(--primary)"></i>
+                            <h4 class="font-semibold mb-2">Yedek Al</h4>
+                            <p class="text-sm text-secondary mb-4">Tüm verilerinizi yedekleyin</p>
+                            <button class="btn btn-primary" id="btn-backup">
+                                <i class="fas fa-download"></i> Yedek Al
+                            </button>
+                        </div>
+                        
+                        <div class="glass-card p-6 text-center">
+                            <i class="fas fa-upload fa-3x mb-4" style="color: var(--success)"></i>
+                            <h4 class="font-semibold mb-2">Yedek Yükle</h4>
+                            <p class="text-sm text-secondary mb-4">Yedeği geri yükleyin</p>
+                            <button class="btn btn-success" id="btn-restore">
+                                <i class="fas fa-upload"></i> Geri Yükle
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- About Tab -->
+                <div class="tab-content" id="settings-about">
+                    <div class="text-center p-6">
+                        <img src="CORE_LOGO.png" alt="CORE" style="width: 80px; height: 80px; margin-bottom: 1rem;">
+                        <h2 class="text-2xl font-bold mb-2">CORE</h2>
+                        <p class="text-secondary mb-4">Cut Optimization & Reporting Engine</p>
+                        <p class="badge badge-primary mb-6">Version 3.5</p>
+                        
+                        <div class="glass-card p-4 mb-4 text-left">
+                            <h4 class="font-semibold mb-2">Özellikler</h4>
+                            <ul class="text-sm text-secondary" style="list-style: none;">
+                                <li>✅ Excel dosyası analizi</li>
+                                <li>✅ Otomatik parça sınıflandırma</li>
+                                <li>✅ Malzeme kalınlık hafızası</li>
+                                <li>✅ Toplu işlem desteği</li>
+                                <li>✅ İş geçmişi ve birleştirme</li>
+                                <li>✅ Çoklu dil desteği</li>
+                            </ul>
+                        </div>
+                        
+                        <button class="btn btn-ghost" id="btn-check-update">
+                            <i class="fas fa-sync"></i> Güncelleme Kontrolü
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" data-close-modal>İptal</button>
+                <button class="btn btn-primary" id="btn-save-settings">
+                    <i class="fas fa-save"></i> Kaydet
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- New Material Modal -->
+    <div class="modal-overlay" id="modal-material">
+        <div class="modal modal-md">
+            <div class="modal-header">
+                <h3 class="modal-title">
+                    <i class="fas fa-cube"></i>
+                    <span>Yeni Malzeme</span>
+                </h3>
+                <button class="modal-close" data-close-modal>
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body text-center">
+                <div class="glass-card p-4 mb-4">
+                    <p class="text-sm text-secondary mb-2">Malzeme Kodu</p>
+                    <p class="text-xl font-bold mono" id="material-code">-</p>
+                </div>
+                
+                <p class="text-secondary mb-4" id="material-remaining"></p>
+                <p class="mb-6">Bu malzemenin kalınlığını seçin:</p>
+                
+                <div class="thickness-selection">
+                    <button class="thickness-btn t-18" data-thickness="18">
+                        <div class="circle">18</div>
+                        <div class="label">Gövde/Kapak/Raf</div>
+                    </button>
+                    <button class="thickness-btn t-16" data-thickness="16">
+                        <div class="circle">16</div>
+                        <div class="label">Çekmece Yanı</div>
+                    </button>
+                    <button class="thickness-btn t-8" data-thickness="8">
+                        <div class="circle">8</div>
+                        <div class="label">Arkalık/Çek. Altı</div>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Results Modal -->
+    <div class="modal-overlay" id="modal-results">
+        <div class="modal modal-xl">
+            <div class="modal-header">
+                <h3 class="modal-title">
+                    <i class="fas fa-chart-bar"></i>
+                    <span data-i18n="results">Sonuçlar - Düzenle ve Kaydet</span>
+                </h3>
+                <button class="modal-close" data-close-modal>
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <!-- Info Banner -->
+                <div class="alert alert-info mb-4">
+                    <i class="fas fa-info-circle"></i>
+                    <span>Parça tiplerini değiştirmek için tıklayın. Değişiklikler öğrenilecek ve gelecekte otomatik uygulanacak.</span>
+                </div>
+                
+                <!-- Stats -->
+                <div class="stats-grid mb-4">
+                    <div class="stat-card glass-card">
+                        <div class="stat-icon primary">
+                            <i class="fas fa-puzzle-piece"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-value" id="result-parts">0</div>
+                            <div class="stat-label">Toplam Parça</div>
+                        </div>
+                    </div>
+                    <div class="stat-card glass-card">
+                        <div class="stat-icon success">
+                            <i class="fas fa-cubes"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-value" id="result-materials">0</div>
+                            <div class="stat-label">Malzeme Çeşidi</div>
+                        </div>
+                    </div>
+                    <div class="stat-card glass-card">
+                        <div class="stat-icon warning">
+                            <i class="fas fa-tags"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-value" id="result-types">0</div>
+                            <div class="stat-label">Parça Tipi</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Tabs -->
+                <div class="tabs">
+                    <button class="tab-btn active" data-tab="results-body">
+                        Gövde (<span id="body-count">0</span>)
+                    </button>
+                    <button class="tab-btn" data-tab="results-thin">
+                        İnce (<span id="thin-count">0</span>)
+                    </button>
+                </div>
+                
+                <!-- Body Table -->
+                <div class="tab-content active" id="results-body">
+                    <div class="table-container">
+                        <div class="table-wrapper" style="max-height: 400px; overflow-y: auto;">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Kalınlık</th>
+                                        <th>Malzeme</th>
+                                        <th>Boy</th>
+                                        <th>En</th>
+                                        <th>Parça Tipi</th>
+                                        <th>Adet</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="body-table">
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Thin Table -->
+                <div class="tab-content" id="results-thin">
+                    <div class="table-container">
+                        <div class="table-wrapper" style="max-height: 400px; overflow-y: auto;">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Kalınlık</th>
+                                        <th>Malzeme</th>
+                                        <th>Boy</th>
+                                        <th>En</th>
+                                        <th>Parça Tipi</th>
+                                        <th>Adet</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="thin-table">
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" data-close-modal>İptal</button>
+                <button class="btn btn-primary" id="btn-save-and-export">
+                    <i class="fas fa-save"></i> Kaydet ve Excel Oluştur
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Output Settings Modal (Çıktı Ayarları) -->
+    <div class="modal-overlay" id="modal-output-settings">
+        <div class="modal modal-lg">
+            <div class="modal-header">
+                <h3 class="modal-title">
+                    <i class="fas fa-sliders-h"></i>
+                    <span>Çıktı Ayarları</span>
+                </h3>
+                <button class="modal-close" data-close-modal>
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p class="text-secondary mb-4">Çıktıya dahil edilecek parça tiplerini seçin:</p>
+                
+                <!-- Quick Actions -->
+                <div class="flex gap-2 mb-4">
+                    <button class="btn btn-sm btn-secondary" onclick="selectAllPartTypes()">
+                        <i class="fas fa-check-double"></i> Tümünü Seç
+                    </button>
+                    <button class="btn btn-sm btn-secondary" onclick="deselectAllPartTypes()">
+                        <i class="fas fa-times"></i> Tümünü Kaldır
+                    </button>
+                </div>
+                
+                <!-- Part Types Grid -->
+                <div class="part-types-grid" id="part-types-grid">
+                    <!-- Dinamik olarak doldurulacak -->
+                </div>
+                
+                <!-- Summary -->
+                <div class="glass-card p-4 mt-4">
+                    <div class="flex justify-between items-center">
+                        <span class="text-secondary">Seçilen parça sayısı:</span>
+                        <span class="font-bold text-lg" id="selected-parts-count">0</span>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" data-close-modal>İptal</button>
+                <button class="btn btn-primary" id="btn-apply-output-settings">
+                    <i class="fas fa-check"></i> Uygula ve Analiz Et
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Job Detail Modal -->
+    <div class="modal-overlay" id="modal-job-detail">
+        <div class="modal modal-md">
+            <div class="modal-header">
+                <h3 class="modal-title">
+                    <i class="fas fa-file-alt"></i>
+                    <span>İş Detayı</span>
+                </h3>
+                <button class="modal-close" data-close-modal>
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="settings-group">
+                    <div class="setting-row">
+                        <span class="setting-label">İş Numarası</span>
+                        <span class="font-semibold" id="detail-job-no">-</span>
+                    </div>
+                    <div class="setting-row">
+                        <span class="setting-label">Tarih</span>
+                        <span id="detail-date">-</span>
+                    </div>
+                    <div class="setting-row">
+                        <span class="setting-label">Dosya</span>
+                        <span id="detail-file">-</span>
+                    </div>
+                    <div class="setting-row">
+                        <span class="setting-label">Toplam Parça</span>
+                        <span id="detail-parts">-</span>
+                    </div>
+                    <div class="setting-row">
+                        <span class="setting-label">Malzeme Çeşidi</span>
+                        <span id="detail-materials">-</span>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" data-close-modal>Kapat</button>
+                <button class="btn btn-primary" id="btn-reprocess">
+                    <i class="fas fa-redo"></i> Tekrar İşle
+                </button>
+                <button class="btn btn-success" id="btn-open-job-excel">
+                    <i class="fas fa-file-excel"></i> Excel'i Aç
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Confirm Modal (Onay Penceresi) -->
+    <div class="modal-overlay" id="modal-confirm">
+        <div class="modal modal-sm">
+            <div class="modal-header">
+                <h3 class="modal-title">
+                    <i class="fas fa-question-circle" id="confirm-icon"></i>
+                    <span id="confirm-title">Onay</span>
+                </h3>
+            </div>
+            <div class="modal-body">
+                <p id="confirm-message" class="text-center" style="font-size: 1.1rem; margin: 1rem 0;"></p>
+            </div>
+            <div class="modal-footer" style="justify-content: center; gap: 1rem;">
+                <button class="btn btn-secondary" id="confirm-cancel">
+                    <i class="fas fa-times"></i> İptal
+                </button>
+                <button class="btn btn-danger" id="confirm-ok">
+                    <i class="fas fa-check"></i> Tamam
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div class="toast-container" id="toast-container"></div>
+
+    <!-- ============================================
+         JAVASCRIPT
+         ============================================ -->
+    <script>
+        // ============================================
+        // SECTION 1: GLOBAL STATE
+        // ============================================
+        const state = {
+            user: null,
+            isAdmin: false,
+            theme: 'light',
+            lang: 'tr',
+            files: [],  // Çoklu dosya listesi [{name, path}, ...]
+            unknownMaterials: [],
+            currentMaterialIndex: 0,
+            settings: {},
+            materials: {},
+            history: [],
+            selectedJobs: new Set(),
+            currentOutputPath: null,
+            currentJobDetail: null,
+            modules: {},  // POZ -> module info
+            customDepths: {},  // POZ -> custom depth (eski uyumluluk)
+            customModules: {},  // POZ -> {genislik, yukseklik, derinlik}
+            currentResults: null,  // Düzenleme için sonuçlar
+            editedParts: new Map()  // Değiştirilen parça tipleri
+        };
+
+        // ============================================
+        // SECTION 2: I18N (Internationalization)
+        // ============================================
+        const translations = {
+            tr: {
+                login: 'Giriş Yap',
+                dashboard: 'Ana Sayfa',
+                history: 'Geçmiş',
+                materials: 'Malzemeler',
+                settings: 'Ayarlar',
+                welcome: 'Hoş Geldiniz',
+                dashboard_subtitle: 'Kesim listesi oluşturmak için dosya yükleyin',
+                total_jobs: 'Toplam İş',
+                total_parts: 'Toplam Parça',
+                saved_materials: 'Kayıtlı Malzeme',
+                today_jobs: 'Bugünkü İş',
+                drop_file: 'Dosyayı buraya sürükleyin veya tıklayın',
+                supported_formats: 'Desteklenen: .xlsx, .xls, .csv',
+                analyze: 'Analiz Et',
+                batch_process: 'Toplu İşlem',
+                job_history: 'İş Geçmişi',
+                history_subtitle: 'Geçmiş işlerinizi görüntüleyin ve yönetin',
+                merge_selected: 'Seçilenleri Birleştir',
+                no_history: 'Henüz işlenmiş dosya bulunmuyor',
+                material_memory: 'Malzeme Hafızası',
+                materials_subtitle: 'Kayıtlı malzeme kalınlıklarını yönetin',
+                clear_all: 'Tümünü Sil',
+                no_materials: 'Henüz kayıtlı malzeme bulunmuyor',
+                results: 'Sonuçlar',
+                ready: 'Hazır',
+                processing: 'İşleniyor...',
+                success: 'Başarılı',
+                error: 'Hata'
+            },
+            en: {
+                login: 'Login',
+                dashboard: 'Dashboard',
+                history: 'History',
+                materials: 'Materials',
+                settings: 'Settings',
+                welcome: 'Welcome',
+                dashboard_subtitle: 'Upload a file to create cutting list',
+                total_jobs: 'Total Jobs',
+                total_parts: 'Total Parts',
+                saved_materials: 'Saved Materials',
+                today_jobs: 'Today\'s Jobs',
+                drop_file: 'Drag & drop file here or click',
+                supported_formats: 'Supported: .xlsx, .xls, .csv',
+                analyze: 'Analyze',
+                batch_process: 'Batch Process',
+                job_history: 'Job History',
+                history_subtitle: 'View and manage your past jobs',
+                merge_selected: 'Merge Selected',
+                no_history: 'No processed files yet',
+                material_memory: 'Material Memory',
+                materials_subtitle: 'Manage saved material thicknesses',
+                clear_all: 'Clear All',
+                no_materials: 'No saved materials yet',
+                results: 'Results',
+                ready: 'Ready',
+                processing: 'Processing...',
+                success: 'Success',
+                error: 'Error'
+            }
+        };
+
+        function t(key) {
+            return translations[state.lang]?.[key] || key;
+        }
+
+        function updateLanguage() {
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                el.textContent = t(key);
+            });
+        }
+
+        // ============================================
+        // SECTION 3: THEME MANAGEMENT
+        // ============================================
+        function setTheme(theme) {
+            state.theme = theme;
+            document.documentElement.setAttribute('data-theme', theme);
+            localStorage.setItem('core-theme', theme);
+            
+            const icon = document.querySelector('#theme-toggle i');
+            icon.className = theme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+        }
+
+        function toggleTheme() {
+            setTheme(state.theme === 'light' ? 'dark' : 'light');
+        }
+
+        // ============================================
+        // SECTION 4: TOAST NOTIFICATIONS
+        // ============================================
+        function showToast(type, title, message, duration = 5000) {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            
+            const icons = {
+                success: 'fa-check-circle',
+                error: 'fa-times-circle',
+                warning: 'fa-exclamation-triangle',
+                info: 'fa-info-circle'
+            };
+            
+            toast.innerHTML = `
+                <i class="fas ${icons[type]} toast-icon"></i>
+                <div class="toast-content">
+                    <div class="toast-title">${title}</div>
+                    <div class="toast-message">${message}</div>
+                </div>
+                <button class="toast-close"><i class="fas fa-times"></i></button>
+            `;
+            
+            container.appendChild(toast);
+            
+            const closeBtn = toast.querySelector('.toast-close');
+            closeBtn.addEventListener('click', () => toast.remove());
+            
+            setTimeout(() => {
+                toast.style.animation = 'slideIn 0.3s ease reverse';
+                setTimeout(() => toast.remove(), 300);
+            }, duration);
+        }
+
+        // ============================================
+        // SECTION 5: MODAL MANAGEMENT
+        // ============================================
+        function openModal(modalId) {
+            document.getElementById(modalId).classList.add('active');
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove('active');
+        }
+
+        function closeAllModals() {
+            document.querySelectorAll('.modal-overlay').forEach(m => m.classList.remove('active'));
+        }
+
+        // Özel onay penceresi (confirm yerine)
+        function showConfirm(message, title = 'Onay', type = 'warning') {
+            return new Promise((resolve) => {
+                const modal = document.getElementById('modal-confirm');
+                const msgEl = document.getElementById('confirm-message');
+                const titleEl = document.getElementById('confirm-title');
+                const iconEl = document.getElementById('confirm-icon');
+                const okBtn = document.getElementById('confirm-ok');
+                const cancelBtn = document.getElementById('confirm-cancel');
+                
+                // İçeriği ayarla
+                msgEl.textContent = message;
+                titleEl.textContent = title;
+                
+                // İkon ve buton rengini ayarla
+                const icons = {
+                    warning: 'fa-exclamation-triangle',
+                    danger: 'fa-trash',
+                    info: 'fa-question-circle',
+                    success: 'fa-check-circle'
+                };
+                iconEl.className = `fas ${icons[type] || icons.warning}`;
+                
+                // Buton rengini ayarla
+                okBtn.className = type === 'danger' ? 'btn btn-danger' : 'btn btn-primary';
+                
+                // Modal'ı aç
+                modal.classList.add('active');
+                
+                // Event listener'ları temizle ve yeniden ekle
+                const newOkBtn = okBtn.cloneNode(true);
+                const newCancelBtn = cancelBtn.cloneNode(true);
+                okBtn.parentNode.replaceChild(newOkBtn, okBtn);
+                cancelBtn.parentNode.replaceChild(newCancelBtn, cancelBtn);
+                
+                newOkBtn.addEventListener('click', () => {
+                    modal.classList.remove('active');
+                    resolve(true);
+                });
+                
+                newCancelBtn.addEventListener('click', () => {
+                    modal.classList.remove('active');
+                    resolve(false);
+                });
+            });
+        }
+
+        // ============================================
+        // SECTION 6: PAGE NAVIGATION
+        // ============================================
+        function showPage(pageId) {
+            document.querySelectorAll('.page').forEach(p => p.classList.add('hidden'));
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.getElementById(`page-${pageId}`).classList.remove('hidden');
+            document.getElementById(`page-${pageId}`).classList.add('active');
+            
+            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+            document.querySelector(`.nav-btn[data-page="${pageId}"]`)?.classList.add('active');
+        }
+
+        // ============================================
+        // SECTION 7: STATUS MANAGEMENT
+        // ============================================
+        function setStatus(text, type = 'success') {
+            const indicator = document.getElementById('status-indicator');
+            const statusText = document.getElementById('status-text');
+            
+            statusText.textContent = text;
+            indicator.className = 'status-indicator';
+            
+            if (type === 'processing') {
+                indicator.classList.add('processing');
+                indicator.style.background = 'var(--warning)';
+            } else if (type === 'error') {
+                indicator.style.background = 'var(--danger)';
+            } else {
+                indicator.style.background = 'var(--success)';
+            }
+        }
+
+        // ============================================
+        // SECTION 8: PROGRESS BAR
+        // ============================================
+        function showProgress(show = true) {
+            document.getElementById('progress-container').classList.toggle('hidden', !show);
+        }
+
+        function updateProgress(percent, status = '') {
+            document.getElementById('progress-fill').style.width = `${percent}%`;
+            document.getElementById('progress-percent').textContent = `${percent}%`;
+            if (status) {
+                document.getElementById('progress-status').textContent = status;
+            }
+        }
+
+        // ============================================
+        // SECTION 9: FILE HANDLING (Multiple Files)
+        // ============================================
+        function setupDropZone() {
+            const dropZone = document.getElementById('drop-zone');
+            
+            // Tıklama - dosya seçici aç
+            dropZone.addEventListener('click', async (e) => {
+                if (e.target.closest('.file-item') || e.target.closest('.btn-remove-file')) return;
+                await selectFilesWithPyWebview();
+            });
+            
+            dropZone.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                dropZone.classList.add('drag-over');
+            });
+            
+            dropZone.addEventListener('dragleave', () => {
+                dropZone.classList.remove('drag-over');
+            });
+            
+            dropZone.addEventListener('drop', async (e) => {
+                e.preventDefault();
+                dropZone.classList.remove('drag-over');
+                await selectFilesWithPyWebview();
+            });
+        }
+
+        // PyWebview ile çoklu dosya seç
+        async function selectFilesWithPyWebview() {
+            try {
+                const result = await api('select_file');  // select_files yerine select_file
+                if (result && result.success && result.files) {
+                    state.files = result.files;
+                    updateFileList();
+                    if (result.files.length > 0) {
+                        showToast('success', 'Dosyalar Yüklendi', `${result.files.length} dosya eklendi`);
+                    }
+                }
+            } catch (error) {
+                console.error('Dosya seçme hatası:', error);
+                showToast('error', 'Hata', 'Dosya seçilemedi');
+            }
+        }
+
+        // Dosya listesini güncelle
+        function updateFileList() {
+            const dropZone = document.getElementById('drop-zone');
+            const fileListContainer = document.getElementById('file-list-container');
+            const btnAnalyze = document.getElementById('btn-analyze');
+            const btnQuickAnalyze = document.getElementById('btn-quick-analyze');
+            
+            if (!fileListContainer) {
+                // Container yoksa oluştur
+                const container = document.createElement('div');
+                container.id = 'file-list-container';
+                container.className = 'file-list-container hidden';
+                dropZone.parentNode.insertBefore(container, dropZone.nextSibling);
+            }
+            
+            const container = document.getElementById('file-list-container');
+            
+            if (state.files.length === 0) {
+                dropZone.classList.remove('has-file');
+                dropZone.querySelector('.drop-zone-icon').textContent = '📁';
+                dropZone.querySelector('.drop-zone-text').textContent = t('drop_file');
+                dropZone.querySelector('.drop-zone-hint').classList.remove('hidden');
+                container.classList.add('hidden');
+                container.innerHTML = '';
+                btnAnalyze.disabled = true;
+                btnQuickAnalyze.disabled = true;
+                // Module depth butonu
+                const btnModuleDepth = document.getElementById('btn-module-depth');
+                if (btnModuleDepth) btnModuleDepth.disabled = true;
+            } else {
+                dropZone.classList.add('has-file');
+                dropZone.querySelector('.drop-zone-icon').textContent = '✅';
+                dropZone.querySelector('.drop-zone-text').textContent = `${state.files.length} dosya yüklendi`;
+                dropZone.querySelector('.drop-zone-hint').classList.add('hidden');
+                
+                container.classList.remove('hidden');
+                container.innerHTML = `
+                    <div class="file-list">
+                        ${state.files.map((file, index) => `
+                            <div class="file-item glass-card">
+                                <i class="fas fa-file-excel" style="color: var(--success)"></i>
+                                <span class="file-name">${file.name}</span>
+                                <button class="btn btn-ghost btn-sm btn-remove-file" onclick="removeFile(${index})">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                        `).join('')}
+                    </div>
+                    <button class="btn btn-ghost btn-sm mt-2" onclick="clearAllFiles()">
+                        <i class="fas fa-trash"></i> Tümünü Temizle
+                    </button>
+                `;
+                
+                btnAnalyze.disabled = false;
+                btnQuickAnalyze.disabled = false;
+                // Module depth butonu
+                const btnModuleDepth = document.getElementById('btn-module-depth');
+                if (btnModuleDepth) btnModuleDepth.disabled = false;
+            }
+        }
+
+        // Tek dosya kaldır
+        async function removeFile(index) {
+            if (state.files[index]) {
+                // API çağrısı kaldırıldı, sadece state'den sil
+                state.files.splice(index, 1);
+                updateFileList();
+            }
+        }
+
+        // Tüm dosyaları temizle
+        async function clearAllFiles() {
+            // API çağrısı kaldırıldı, sadece state'i temizle
+            state.files = [];
+            state.modules = {};
+            state.customDepths = {};
+            updateFileList();
+        }
+
+        function resetFileInput() {
+            clearAllFiles();
+        }
+
+        // ============================================
+        // SECTION 10: API CALLS (Python Bridge)
+        // ============================================
+        async function api(method, ...args) {
+    console.log('api() CAGIRILDI:', method, args);   // <--- A
+
+    if (!window.pywebview || !window.pywebview.api) {
+        console.error('pywebview API yok');
+        throw new Error('API bağlantısı yok');
+    }
+
+    if (typeof window.pywebview.api[method] !== 'function') {
+        console.error('Metot yok:', method);
+        throw new Error(`API metodu bulunamadı: ${method}`);
+    }
+
+    const result = await window.pywebview.api[method](...args);
+    console.log('api() DONUS:', method, result);     // <--- B
+    return result;
+}
+
+
+        // Development mock API
+        function mockApi(method, args) {
+            const mocks = {
+                login: { success: true, user: 'Admin', is_admin: true },
+                get_settings: {
+                    standart_yukseklik: 720,
+                    standart_derinlik: 580,
+                    yan_dusumu: 36,
+                    raf_genislik_dusumu: 37,
+                    raf_derinlik_alt_dolap: 50,
+                    raf_derinlik_ust_dolap: 40,
+                    tolerans: 3,
+                    arkalik_dusumu: 18,
+                    cekmece_alti_dusumu: 60,
+                    arkalik_max_kalinlik: 8
+                },
+                get_materials: {},
+                get_history: [],
+                get_stats: { jobs: 0, parts: 0, materials: 0, today: 0 }
+            };
+            return mocks[method] || null;
+        }
+
+        // ============================================
+        // SECTION 11: LOGIN HANDLING
+        // ============================================
+        async function handleLogin(e) {
+            e.preventDefault();
+            
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value;
+            const errorEl = document.getElementById('login-error');
+
+            errorEl.classList.add('hidden');
+
+            if (!username || !password) {
+                errorEl.textContent = 'Kullanıcı adı ve şifre gerekli!';
+                errorEl.classList.remove('hidden');
+                return;
+            }
+
+            try {
+                const result = await api('login', username, password);
+
+                if (result && result.success) {
+                    state.user = result.user;
+                    state.isAdmin = result.is_admin;
+                    showMainScreen();
+                } else {
+                    errorEl.textContent = (result && result.error) || 'Giriş başarısız!';
+                    errorEl.classList.remove('hidden');
+                }
+            } catch (error) {
+                console.error('Login error:', error);
+                errorEl.textContent = 'Bağlantı hatası!';
+                errorEl.classList.remove('hidden');
+            }
+        }
+
+
+
+        
+        function showMainScreen() {
+            document.getElementById('login-screen').style.display = 'none';
+            document.getElementById('main-screen').classList.add('active');
+            
+            document.getElementById('user-name').textContent = state.user;
+            document.getElementById('user-avatar').textContent = state.user.charAt(0).toUpperCase();
+            document.getElementById('welcome-name').textContent = state.user;
+            
+            // Admin-only features
+            if (!state.isAdmin) {
+                const tabUsers = document.getElementById('tab-users');
+                if (tabUsers) tabUsers.classList.add('hidden');
+            }
+            
+            loadDashboardData();
+        }
+        
+        function logout() {
+            location.reload();
+        }
+
+        // ============================================
+        // SECTION 12: DASHBOARD DATA
+        // ============================================
+        async function loadDashboardData() {
+            try {
+                const stats = await api('get_stats');
+                document.getElementById('stat-jobs').textContent = stats.jobs || 0;
+                document.getElementById('stat-parts').textContent = stats.parts || 0;
+                document.getElementById('stat-materials').textContent = stats.materials || 0;
+                document.getElementById('stat-today').textContent = stats.today || 0;
+                
+                state.settings = await api('get_settings');
+                state.materials = await api('get_materials');
+                state.history = await api('get_history');
+            } catch (error) {
+                console.error('Dashboard load error:', error);
+            }
+        }
+
+        // ============================================
+        // SECTION 13: ANALYSIS
+        // ============================================
+        async function analyzeFile() {
+            if (state.files.length === 0) {
+                showToast('warning', 'Uyarı', 'Lütfen önce dosya seçin!');
+                return;
+            }
+            
+            setStatus('İşleniyor...', 'processing');
+            showProgress(true);
+            updateProgress(10, 'Dosyalar kontrol ediliyor...');
+            
+            try {
+                // Tüm dosyaları kontrol et
+                const checkResult = await api('check_all_files');
+                updateProgress(30, 'Dosyalar kontrol edildi');
+                
+                if (!checkResult.success) {
+                    showToast('error', 'Hata', checkResult.error);
+                    showProgress(false);
+                    setStatus('Hata', 'error');
+                    return;
+                }
+                
+                // Bilinmeyen malzemeler varsa
+                if (checkResult.unknown && checkResult.unknown.length > 0) {
+                    state.unknownMaterials = checkResult.unknown;
+                    state.currentMaterialIndex = 0;
+                    showProgress(false);
+                    showMaterialDialog();
+                    return;
+                }
+                
+                await continueAnalysis();
+                
+            } catch (error) {
+                showToast('error', 'Hata', error.message || 'Analiz sırasında hata oluştu!');
+                showProgress(false);
+                setStatus('Hata', 'error');
+            }
+        }
+
+        // Hızlı Analiz - sonuç göstermeden direkt Excel oluştur
+        async function quickAnalyze() {
+            if (state.files.length === 0) {
+                showToast('warning', 'Uyarı', 'Lütfen önce dosya seçin!');
+                return;
+            }
+            
+            setStatus('Hızlı analiz başlıyor...', 'processing');
+            showProgress(true);
+            updateProgress(10, 'Dosya kontrol ediliyor...');
+            
+            try {
+                // Önce dosyayı kontrol et
+                const checkResult = await api('check_all_files');
+                
+                if (!checkResult.success) {
+                    showToast('error', 'Hata', checkResult.error);
+                    showProgress(false);
+                    setStatus('Hata', 'error');
+                    return;
+                }
+                
+                // Bilinmeyen malzemeler varsa
+                if (checkResult.unknown && checkResult.unknown.length > 0) {
+                    state.unknownMaterials = checkResult.unknown;
+                    state.currentMaterialIndex = 0;
+                    state.afterMaterialsAction = 'quickAnalyze';
+                    showProgress(false);
+                    showMaterialDialog();
+                    return;
+                }
+                
+                await continueQuickAnalyze();
+                
+            } catch (error) {
+                showToast('error', 'Hata', error.message || 'Hızlı analiz sırasında hata oluştu!');
+                showProgress(false);
+                setStatus('Hata', 'error');
+            }
+        }
+
+        async function continueQuickAnalyze() {
+            showProgress(true);
+            updateProgress(30, 'Analiz ediliyor...');
+            
+            try {
+                // Tek dosya için direkt analiz ve kaydet
+                if (state.files.length === 1) {
+                    updateProgress(50, 'Excel oluşturuluyor...');
+                    const result = await api('analyze_and_export', state.files[0].path);
+                    
+                    updateProgress(100, 'Tamamlandı!');
+                    
+                    if (result.success) {
+                        setStatus('Tamamlandı', 'success');
+                        showToast('success', 'Hızlı Analiz Tamamlandı', 
+                            `${result.total_parts} parça işlendi. Excel kaydedildi.`);
+                        
+                        await loadDashboardData();
+                        await loadHistoryPage();
+                        
+                        setTimeout(() => {
+                            resetFileInput();
+                            showProgress(false);
+                        }, 1500);
+                    } else {
+                        showToast('error', 'Hata', result.error || 'Analiz başarısız!');
+                        showProgress(false);
+                        setStatus('Hata', 'error');
+                    }
+                } else {
+                    // Birden fazla dosya için toplu işlem
+                    updateProgress(50, 'Dosyalar analiz ediliyor...');
+                    const result = await api('analyze_all_files');
+                    
+                    updateProgress(100, 'Tamamlandı!');
+                    
+                    if (result.success || result.successful > 0) {
+                        setStatus('Tamamlandı', 'success');
+                        
+                        let message = `${result.successful}/${result.total_files} dosya başarıyla işlendi.`;
+                        if (result.failed > 0) {
+                            message += ` ${result.failed} dosya hatalı.`;
+                        }
+                        
+                        showToast('success', 'Hızlı Analiz Tamamlandı', message);
+                        
+                        await loadDashboardData();
+                        
+                        setTimeout(() => {
+                            resetFileInput();
+                            showProgress(false);
+                        }, 1500);
+                    } else {
+                        showToast('error', 'Hata', 'Hiçbir dosya işlenemedi!');
+                        showProgress(false);
+                        setStatus('Hata', 'error');
+                    }
+                }
+            } catch (error) {
+                showToast('error', 'Hata', error.message || 'İşlem sırasında hata oluştu!');
+                showProgress(false);
+                setStatus('Hata', 'error');
+            }
+        }
+
+        async function continueAnalysis() {
+            showProgress(true);
+            updateProgress(50, 'Analiz ediliyor...');
+            
+            let result;
+            if (state.files.length === 1) {
+                // Tek dosya analizi - analyze_file kullan (Excel'e kaydetmez)
+                result = await api('analyze_file', 0);
+            } else {
+                // Çoklu dosya için de tek tek analiz yap
+                result = await api('analyze_file', 0);
+            }
+            
+            updateProgress(100, 'Tamamlandı!');
+            showProgress(false);
+            
+            if (result && result.success) {
+                setStatus('Düzenleme için hazır', 'success');
+                
+                // Sonuçları düzenleme modalında göster
+                if (result.body || result.thin) {
+                    showResultsModal(result);
+                } else {
+                    showToast('warning', 'Uyarı', 'Analiz sonucunda parça bulunamadı.');
+                }
+            } else {
+                showToast('error', 'Hata', (result && result.error) || 'Analiz başarısız!');
+                setStatus('Hata', 'error');
+            }
+        }
+
+        // ============================================
+        // SECTION 13B: MODULE DEPTH CUSTOMIZATION
+        // ============================================
+        async function openModuleDepthModal() {
+            if (state.files.length === 0) {
+                showToast('warning', 'Uyarı', 'Önce dosya yükleyin!');
+                return;
+            }
+            
+            setStatus('Modüller yükleniyor...', 'processing');
+            
+            try {
+                // İlk dosyadan modülleri al
+                const result = await api('get_modules', state.files[0].path);
+                
+                if (!result.success) {
+                    showToast('error', 'Hata', result.error || 'Modüller yüklenemedi!');
+                    setStatus('Hata', 'error');
+                    return;
+                }
+                
+                state.modules = result.modules || {};
+                renderModuleList();
+                setStatus('Hazır', 'success');
+                openModal('modal-module-depth');
+                
+            } catch (error) {
+                showToast('error', 'Hata', 'Modüller yüklenirken hata oluştu!');
+                setStatus('Hata', 'error');
+            }
+        }
+        
+        function renderModuleList() {
+            const container = document.getElementById('module-list');
+            const modules = Object.entries(state.modules);
+            
+            if (modules.length === 0) {
+                container.innerHTML = `
+                    <div class="table-empty">
+                        <i class="fas fa-cube fa-3x mb-4" style="color: var(--text-muted)"></i>
+                        <p>Dosyada modül bilgisi bulunamadı</p>
+                        <p class="text-sm text-muted">Excel dosyasında #8542 Info4 ve Info5 sütunları gerekli</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            container.innerHTML = modules.map(([poz, mod]) => {
+                const customMod = state.customModules?.[poz] || {};
+                const hasCustom = (customMod.genislik || customMod.yukseklik || customMod.derinlik) ? 'has-custom' : '';
+                const tipLabel = mod.tip === 'ust' ? 'Üst Dolap' : mod.tip === 'boy' ? 'Boy Dolap' : 'Alt Dolap';
+                
+                // Varsayılan değerler
+                const defaultGen = mod.genislik_cm ? mod.genislik_cm * 10 : '';
+                const defaultYuk = mod.tip === 'boy' ? 2100 : 720;
+                const defaultDer = mod.varsayilan_derinlik || (mod.tip === 'ust' ? 330 : 580);
+                
+                return `
+                    <div class="module-depth-item ${hasCustom}">
+                        <span class="module-poz">${poz}</span>
+                        <div class="module-info">
+                            <div class="module-name">${mod.ad || '-'}</div>
+                            <div class="module-type">${tipLabel}</div>
+                        </div>
+                        <div class="module-inputs">
+                            <div class="module-input-group">
+                                <span class="module-input-label">Genişlik</span>
+                                <input type="number" 
+                                       class="input module-depth-input" 
+                                       placeholder="${defaultGen || 'Oto'}"
+                                       value="${customMod.genislik || ''}"
+                                       onchange="setModuleValue('${poz}', 'genislik', this.value)"
+                                       data-poz="${poz}"
+                                       data-type="genislik">
+                                <span class="module-default">${defaultGen ? defaultGen + 'mm' : 'Oto'}</span>
+                            </div>
+                            <div class="module-input-group">
+                                <span class="module-input-label">Yükseklik</span>
+                                <input type="number" 
+                                       class="input module-depth-input" 
+                                       placeholder="${defaultYuk}"
+                                       value="${customMod.yukseklik || ''}"
+                                       onchange="setModuleValue('${poz}', 'yukseklik', this.value)"
+                                       data-poz="${poz}"
+                                       data-type="yukseklik">
+                                <span class="module-default">${defaultYuk}mm</span>
+                            </div>
+                            <div class="module-input-group">
+                                <span class="module-input-label">Derinlik</span>
+                                <input type="number" 
+                                       class="input module-depth-input" 
+                                       placeholder="${defaultDer}"
+                                       value="${customMod.derinlik || ''}"
+                                       onchange="setModuleValue('${poz}', 'derinlik', this.value)"
+                                       data-poz="${poz}"
+                                       data-type="derinlik">
+                                <span class="module-default">${defaultDer}mm</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+        
+        function setModuleValue(poz, type, value) {
+            if (!state.customModules) {
+                state.customModules = {};
+            }
+            if (!state.customModules[poz]) {
+                state.customModules[poz] = {};
+            }
+            
+            if (value && parseInt(value) > 0) {
+                state.customModules[poz][type] = parseInt(value);
+            } else {
+                delete state.customModules[poz][type];
+                // Eğer modül için hiç değer kalmadıysa sil
+                if (Object.keys(state.customModules[poz]).length === 0) {
+                    delete state.customModules[poz];
+                }
+            }
+            renderModuleList();
+        }
+        
+        // Eski fonksiyon - uyumluluk için
+        function setModuleDepth(poz, value) {
+            setModuleValue(poz, 'derinlik', value);
+        }
+        
+        async function clearCustomDepths() {
+            state.customDepths = {};
+            state.customModules = {};
+            await api('clear_custom_depths');
+            renderModuleList();
+            showToast('info', 'Sıfırlandı', 'Tüm özel modül ayarları kaldırıldı.');
+        }
+        
+        async function applyModuleDepths() {
+            // Backend'e özel modül değerlerini gönder
+            if (state.customModules) {
+                for (const [poz, values] of Object.entries(state.customModules)) {
+                    await api('set_custom_module', poz, values);
+                }
+            }
+            
+            // Eski uyumluluk için derinlikleri de gönder
+            if (state.customDepths) {
+                for (const [poz, depth] of Object.entries(state.customDepths)) {
+                    await api('set_custom_depth', poz, depth);
+                }
+            }
+            
+            closeModal('modal-module-depth');
+            
+            const count = Object.keys(state.customModules || {}).length;
+            if (count > 0) {
+                showToast('success', 'Uygulandı', `${count} modül için özel ayarlar belirlendi.`);
+            } else {
+                showToast('info', 'Bilgi', 'Tüm modüller standart değerleri kullanacak.');
+            }
+        }
+
+        // ============================================
+        // SECTION 14: MATERIAL DIALOG
+        // ============================================
+        function showMaterialDialog() {
+            if (state.currentMaterialIndex >= state.unknownMaterials.length) {
+                continueAnalysis();
+                return;
+            }
+            
+            const material = state.unknownMaterials[state.currentMaterialIndex];
+            const remaining = state.unknownMaterials.length - state.currentMaterialIndex - 1;
+            
+            document.getElementById('material-code').textContent = material;
+            document.getElementById('material-remaining').textContent = 
+                remaining > 0 ? `(+${remaining} bilinmeyen malzeme daha)` : '';
+            
+            openModal('modal-material');
+        }
+
+        async function selectThickness(thickness) {
+            const material = state.unknownMaterials[state.currentMaterialIndex];
+            
+            await api('save_material', material, thickness);
+            
+            state.currentMaterialIndex++;
+            closeModal('modal-material');
+            
+            if (state.currentMaterialIndex < state.unknownMaterials.length) {
+                setTimeout(showMaterialDialog, 300);
+            } else {
+                // Malzemeler bitti, ne yapılacağına bak
+                if (state.afterMaterialsAction === 'quickAnalyze') {
+                    state.afterMaterialsAction = null;
+                    showProgress(true);
+                    await continueQuickAnalyze();
+                } else {
+                    showProgress(true);
+                    await continueAnalysis();
+                }
+            }
+        }
+
+        // ============================================
+        // SECTION 15: RESULTS MODAL - EDITABLE VERSION
+        // ============================================
+        
+        // Parça tipi seçenekleri (Kanallı artık ayrı toggle ile)
+        const PART_TYPES = [
+            'YAN',
+            'ALT-ÜST',
+            'SABİT',
+            'RAF',
+            'RAF (ÜST)',
+            'KAYIT/KUŞAK',
+            'ARKALIK',
+            'ARKALIK (İÇERDE)',
+            'ÇEKMECE YANI',
+            'DİĞER'
+        ];
+        
+        function showResultsModal(result) {
+            // Sonuçları state'e kaydet (düzenleme için)
+            state.currentResults = {
+                body: JSON.parse(JSON.stringify(result.body || [])),
+                thin: JSON.parse(JSON.stringify(result.thin || [])),
+                job_no: result.job_no,
+                total_parts: result.total_parts,
+                material_count: result.material_count,
+                type_count: result.type_count
+            };
+            state.editedParts = new Map(); // Düzenlenen parçaları takip et
+            
+            document.getElementById('result-parts').textContent = result.total_parts || 0;
+            document.getElementById('result-materials').textContent = result.material_count || 0;
+            document.getElementById('result-types').textContent = result.type_count || 0;
+            
+            document.getElementById('body-count').textContent = result.body?.length || 0;
+            document.getElementById('thin-count').textContent = result.thin?.length || 0;
+            
+            // Tabloları doldur (düzenlenebilir)
+            populateEditableTable('body-table', state.currentResults.body, 'body');
+            populateEditableTable('thin-table', state.currentResults.thin, 'thin');
+            
+            openModal('modal-results');
+        }
+
+        function populateEditableTable(tableId, data, tableType) {
+            const tbody = document.getElementById(tableId);
+            tbody.innerHTML = '';
+            
+            if (!data || data.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted">Veri yok</td></tr>';
+                return;
+            }
+            
+            data.forEach((row, index) => {
+                const thickness = row.KALINLIK || row['KALINLIK'] || 18;
+                const badgeClass = thickness <= 8 ? 'badge-8' : thickness === 16 ? 'badge-16' : 'badge-18';
+                // Parça tipinden (K) veya (KANALLI) ifadesini temizle
+                let partType = row['PARÇA TİPİ'] || row.PARCA_TIPI || 'DİĞER';
+                partType = partType.replace(/\s*\(K\)\s*/gi, '').replace(/\s*\(KANALLI\)\s*/gi, '').trim();
+                
+                const malzeme = row.MALZEME || row['MALZEME'] || '-';
+                const boy = row.BOY || row['BOY'] || 0;
+                const en = row.EN || row['EN'] || 0;
+                const adet = row.ADET || row['ADET'] || 0;
+                const kanalli = row.KANALLI || row['KANALLI'] || false;
+                
+                // Kanallı toggle butonu
+                const kanalliToggle = `<span class="kanalli-toggle ${kanalli ? 'active' : ''}" 
+                    data-index="${index}" 
+                    data-table="${tableType}"
+                    onclick="toggleKanalli(this)"
+                    title="${kanalli ? 'Kanallı - tıkla değiştir' : 'Kanalsız - tıkla değiştir'}">K</span>`;
+                
+                // Dropdown oluştur
+                const selectOptions = PART_TYPES.map(type => 
+                    `<option value="${type}" ${type === partType ? 'selected' : ''}>${type}</option>`
+                ).join('');
+                
+                const tr = document.createElement('tr');
+                tr.dataset.index = index;
+                tr.dataset.tableType = tableType;
+                tr.innerHTML = `
+                    <td><span class="badge ${badgeClass}">${thickness}mm</span></td>
+                    <td class="mono">${malzeme}</td>
+                    <td>${boy}</td>
+                    <td>${en}</td>
+                    <td>
+                        <div class="part-type-cell">
+                            <select class="part-type-select" 
+                                    data-index="${index}" 
+                                    data-table="${tableType}"
+                                    data-original="${partType}"
+                                    data-boy="${boy}"
+                                    data-en="${en}"
+                                    data-malzeme="${malzeme}"
+                                    onchange="onPartTypeChange(this)">
+                                ${selectOptions}
+                            </select>
+                            ${kanalliToggle}
+                        </div>
+                    </td>
+                    <td><strong>${adet}</strong></td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+        
+        // Kanallı toggle fonksiyonu
+        function toggleKanalli(element) {
+            const index = parseInt(element.dataset.index);
+            const tableType = element.dataset.table;
+            const isActive = element.classList.contains('active');
+            
+            // Toggle
+            if (isActive) {
+                element.classList.remove('active');
+                element.title = 'Kanalsız - tıkla değiştir';
+            } else {
+                element.classList.add('active');
+                element.title = 'Kanallı - tıkla değiştir';
+            }
+            
+            // State'i güncelle
+            const newValue = !isActive;
+            if (tableType === 'body') {
+                state.currentResults.body[index]['KANALLI'] = newValue;
+            } else {
+                state.currentResults.thin[index]['KANALLI'] = newValue;
+            }
+            
+            // Satırı edited olarak işaretle
+            element.closest('tr').classList.add('edited');
+        }
+        
+        function onPartTypeChange(select) {
+            const index = parseInt(select.dataset.index);
+            const tableType = select.dataset.table;
+            const original = select.dataset.original;
+            const newValue = select.value;
+            const boy = select.dataset.boy;
+            const en = select.dataset.en;
+            const malzeme = select.dataset.malzeme;
+            
+            // Görsel geri bildirim
+            if (newValue !== original) {
+                select.classList.add('changed');
+                select.closest('tr').classList.add('edited');
+            } else {
+                select.classList.remove('changed');
+                select.closest('tr').classList.remove('edited');
+            }
+            
+            // State'i güncelle
+            if (tableType === 'body') {
+                state.currentResults.body[index]['PARÇA TİPİ'] = newValue;
+            } else {
+                state.currentResults.thin[index]['PARÇA TİPİ'] = newValue;
+            }
+            
+            // Öğrenme için kaydet (ölçü + malzeme bazlı)
+            if (newValue !== original) {
+                const key = `${boy}x${en}_${malzeme}`;
+                state.editedParts.set(key, {
+                    boy: parseInt(boy),
+                    en: parseInt(en),
+                    malzeme: malzeme,
+                    partType: newValue
+                });
+            }
+        }
+        
+        async function saveAndExport() {
+            setStatus('Kaydediliyor...', 'processing');
+            showProgress(true);
+            updateProgress(30, 'Öğrenilen kurallar kaydediliyor...');
+            
+            try {
+                // 1. Öğrenilen kuralları kaydet
+                if (state.editedParts.size > 0) {
+                    const learnedRules = Array.from(state.editedParts.values());
+                    await api('save_learned_parts', learnedRules);
+                    console.log(`${learnedRules.length} kural öğrenildi`);
+                }
+                
+                updateProgress(60, 'Excel oluşturuluyor...');
+                
+                // 2. Düzenlenmiş sonuçlarla Excel oluştur
+                const result = await api('export_edited_results', 
+                    state.currentResults.body, 
+                    state.currentResults.thin,
+                    state.currentResults.job_no
+                );
+                
+                updateProgress(100, 'Tamamlandı!');
+                
+                if (result.success) {
+                    setStatus('Tamamlandı', 'success');
+                    showToast('success', 'Başarılı', 'Kesim listesi oluşturuldu!');
+                    
+                    state.currentOutputPath = result.output_path;
+                    
+                    // Refresh data
+                    await loadDashboardData();
+                    
+                    // Modal'ı kapat ve dosyayı aç
+                    closeModal('modal-results');
+                    
+                    // Excel'i aç
+                    if (result.output_path) {
+                        await api('open_file', result.output_path);
+                    }
+                    
+                    // Reset
+                    setTimeout(() => {
+                        resetFileInput();
+                        showProgress(false);
+                    }, 1000);
+                } else {
+                    showToast('error', 'Hata', result.error || 'Excel oluşturulamadı!');
+                    showProgress(false);
+                    setStatus('Hata', 'error');
+                }
+            } catch (error) {
+                console.error('Save error:', error);
+                showToast('error', 'Hata', 'Kaydetme sırasında hata oluştu!');
+                showProgress(false);
+                setStatus('Hata', 'error');
+            }
+        }
+
+        // ============================================
+        // SECTION 16: HISTORY PAGE
+        // ============================================
+        async function loadHistoryPage() {
+            state.history = await api('get_history');
+            state.selectedJobs.clear();
+            renderHistoryList();
+        }
+
+        function renderHistoryList(filter = '') {
+    const container = document.getElementById('history-list');
+
+    const filtered = state.history.filter(job =>
+        job.job_no.toLowerCase().includes(filter.toLowerCase()) ||
+        job.file_name.toLowerCase().includes(filter.toLowerCase())
+    );
+
+    if (filtered.length === 0) {
+        container.innerHTML = `
+            <div class="table-empty">
+                <i class="fas fa-inbox fa-3x mb-4" style="color: var(--text-muted)"></i>
+                <p data-i18n="nohistory">Henüz işlenmiş dosya bulunmuyor</p>
+            </div>
+        `;
+        return;
+    }
+
+    container.innerHTML = filtered.map(job => {
+    return `
+        <div class="history-item" data-id="${job.id}">
+            <div class="history-info" onclick="showJobDetailById(${job.id})" style="cursor: pointer; flex: 1;">
+                <div class="history-job-no">${job.job_no}</div>
+                <div class="history-file">${job.file_name}</div>
+            </div>
+            <div class="history-meta">
+                <span class="history-date">
+                    <i class="fas fa-calendar"></i> ${job.date}
+                </span>
+                <span class="history-parts">
+                    <i class="fas fa-puzzle-piece"></i> ${job.stats?.parts || 0}
+                </span>
+            </div>
+            <button class="btn-delete-job" onclick="event.stopPropagation(); deleteJob(${job.id}, '${job.job_no}')" title="İşi Sil">
+                <i class="fas fa-trash"></i>
+            </button>
+        </div>
+    `;
+}).join('');
+
+    // Add click listeners - sadece info kısmına tıklama için
+container.querySelectorAll('.history-item').forEach(item => {
+    item.addEventListener('dblclick', (e) => {
+        if (e.target.closest('.btn-delete-job')) return;
+        const id = parseInt(item.dataset.id);
+        const job = state.history.find(j => j.id === id);
+        if (job) {
+            showJobDetail(job);
+        }
+    });
+});
+}
+
+        // ID ile iş detayını göster
+        function showJobDetailById(jobId) {
+            const job = state.history.find(j => j.id === jobId);
+            if (job) {
+                showJobDetail(job);
+            }
+        }
+
+        // Tek iş silme
+        async function deleteJob(jobId, jobNo) {
+            const confirmed = await showConfirm(
+                `"${jobNo}" işini silmek istediğinize emin misiniz?`,
+                'İşi Sil',
+                'danger'
+            );
+            
+            if (!confirmed) return;
+            
+            try {
+                const result = await api('delete_history', [jobId]);
+                console.log('Delete result:', result);
+                
+                if (result && result.success) {
+                    showToast('success', 'Silindi', `${jobNo} silindi.`);
+                }
+                
+                // Her durumda listeyi güncelle
+                await loadHistoryPage();
+                await loadDashboardData();
+                
+            } catch (error) {
+                console.error('Delete error:', error);
+                // Hata olsa bile listeyi güncelle
+                await loadHistoryPage();
+            }
+        }
+
+        async function mergeSelectedJobs() {
+            if (state.selectedJobs.size < 2) {
+                showToast('warning', 'Uyarı', 'En az 2 iş seçmelisiniz!');
+                return;
+            }
+            
+            try {
+                setStatus('Birleştiriliyor...', 'processing');
+                const jobIds = Array.from(state.selectedJobs);
+                const result = await api('merge_jobs', jobIds);
+                
+                if (result.success) {
+                    showToast('success', 'Başarılı', 'İşler birleştirildi!');
+                    setStatus('Hazır', 'success');
+                    
+                    if (result.output_path) {
+                        state.currentOutputPath = result.output_path;
+                        // Sonuçları göster
+                        showResultsModal(result);
+                    }
+                    
+                    state.selectedJobs.clear();
+                    await loadHistoryPage();
+                } else {
+                    showToast('error', 'Hata', result.error || 'Birleştirme başarısız!');
+                    setStatus('Hata', 'error');
+                }
+            } catch (error) {
+                showToast('error', 'Hata', 'Birleştirme sırasında hata oluştu!');
+                setStatus('Hata', 'error');
+            }
+        }
+            
+        
+
+        function toggleJobSelection(index) {
+            if (state.selectedJobs.has(index)) {
+                state.selectedJobs.delete(index);
+            } else {
+                state.selectedJobs.add(index);
+            }
+        }
+
+        function showJobDetail(job) {
+            document.getElementById('detail-job-no').textContent = job.job_no || '-';
+            document.getElementById('detail-date').textContent = job.date || '-';
+            document.getElementById('detail-file').textContent = job.file_name || '-';
+            document.getElementById('detail-parts').textContent = job.stats?.parts || '0';
+            document.getElementById('detail-materials').textContent = job.stats?.materials || '0';
+            
+            state.currentJobDetail = job;
+            openModal('modal-job-detail');
+        }
+
+        // İş detay buton fonksiyonları
+        async function reprocessJob() {
+            if (!state.currentJobDetail) {
+                showToast('warning', 'Uyarı', 'İş detayı bulunamadı!');
+                return;
+            }
+            
+            const filePath = state.currentJobDetail.file_path;
+            if (!filePath) {
+                showToast('error', 'Hata', 'Orijinal dosya yolu bulunamadı!');
+                return;
+            }
+            
+            // Dosyanın hala var olup olmadığını kontrol et
+            closeModal('modal-job-detail');
+            
+            setStatus('İşleniyor...', 'processing');
+            showProgress(true);
+            updateProgress(10, 'Dosya kontrol ediliyor...');
+            
+            try {
+                // Dosyayı kontrol et
+                const checkResult = await api('check_file', filePath);
+                updateProgress(30, 'Dosya kontrol edildi');
+                
+                if (!checkResult.success) {
+                    showToast('error', 'Hata', checkResult.error || 'Dosya bulunamadı veya okunamıyor!');
+                    showProgress(false);
+                    setStatus('Hata', 'error');
+                    return;
+                }
+                
+                // Bilinmeyen malzemeler varsa
+                if (checkResult.unknown && checkResult.unknown.length > 0) {
+                    state.unknownMaterials = checkResult.unknown;
+                    state.currentMaterialIndex = 0;
+                    state.currentFile = { name: state.currentJobDetail.file_name, path: filePath };
+                    showProgress(false);
+                    showMaterialDialog();
+                    return;
+                }
+                
+                // Analiz et
+                updateProgress(50, 'Analiz ediliyor...');
+                const result = await api('analyze_and_export', filePath);
+                updateProgress(100, 'Tamamlandı!');
+                
+                if (result.success) {
+                    setStatus('Tamamlandı', 'success');
+                    showToast('success', 'Başarılı', 'Kesim listesi yeniden oluşturuldu!');
+                    showResultsModal(result);
+                    await loadDashboardData();
+                    await loadHistoryPage();
+                } else {
+                    showToast('error', 'Hata', result.error);
+                    setStatus('Hata', 'error');
+                }
+                
+                setTimeout(() => showProgress(false), 1500);
+                
+            } catch (error) {
+                showToast('error', 'Hata', error.message || 'Yeniden işleme sırasında hata oluştu!');
+                showProgress(false);
+                setStatus('Hata', 'error');
+            }
+        }
+
+        async function openJobExcel() {
+            if (!state.currentJobDetail) {
+                showToast('warning', 'Uyarı', 'İş detayı bulunamadı!');
+                return;
+            }
+            
+            const outputPath = state.currentJobDetail.output_path;
+            if (!outputPath) {
+                showToast('error', 'Hata', 'Excel dosya yolu bulunamadı!');
+                return;
+            }
+            
+            try {
+                const result = await api('open_file', outputPath);
+                if (!result.success) {
+                    showToast('error', 'Hata', result.error || 'Dosya açılamadı!');
+                }
+            } catch (error) {
+                showToast('error', 'Hata', 'Dosya açılırken hata oluştu!');
+            }
+        }
+
+        // Seçilen işleri birleştir
+        async function mergeSelectedJobs() {
+            if (state.selectedJobs.size < 2) {
+                showToast('warning', 'Uyarı', 'En az 2 iş seçmelisiniz!');
+                return;
+            }
+            
+            const jobIds = Array.from(state.selectedJobs).map(index => state.history[index]?.id).filter(Boolean);
+            
+            if (jobIds.length < 2) {
+                showToast('error', 'Hata', 'Seçilen işler geçerli değil!');
+                return;
+            }
+            
+            try {
+                setStatus('Birleştiriliyor...', 'processing');
+                const result = await api('merge_jobs', jobIds);
+                
+                if (result.success) {
+                    showToast('success', 'Başarılı', 'İşler birleştirildi!');
+                    setStatus('Hazır', 'success');
+                    
+                    // Sonuçları göster
+                    if (result.output_path) {
+                        state.currentOutputPath = result.output_path;
+                    }
+                    
+                    // Seçimleri temizle
+                    state.selectedJobs.clear();
+                    await loadHistoryPage();
+                } else {
+                    showToast('error', 'Hata', result.error || 'Birleştirme başarısız!');
+                    setStatus('Hata', 'error');
+                }
+            } catch (error) {
+                showToast('error', 'Hata', 'Birleştirme sırasında hata oluştu!');
+                setStatus('Hata', 'error');
+            }
+        }
+
+        // ============================================
+        // SECTION 17: MATERIALS PAGE
+        // ============================================
+        async function loadMaterialsPage() {
+            state.materials = await api('get_materials');
+            renderMaterialsList();
+        }
+
+        function renderMaterialsList(filter = '') {
+            const container = document.getElementById('materials-list');
+            const entries = Object.entries(state.materials).filter(([code]) =>
+                code.toLowerCase().includes(filter.toLowerCase())
+            );
+            
+            // Update counts
+            let count18 = 0, count16 = 0, count8 = 0;
+            Object.values(state.materials).forEach(t => {
+                if (t === 18) count18++;
+                else if (t === 16) count16++;
+                else count8++;
+            });
+            document.getElementById('count-18').textContent = count18;
+            document.getElementById('count-16').textContent = count16;
+            document.getElementById('count-8').textContent = count8;
+            
+            if (entries.length === 0) {
+                container.innerHTML = `
+                    <div class="table-empty">
+                        <i class="fas fa-cubes fa-3x mb-4" style="color: var(--text-muted)"></i>
+                        <p>${t('no_materials')}</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            container.innerHTML = entries.map(([code, thickness]) => {
+                const badgeClass = thickness <= 8 ? 'badge-8' : thickness === 16 ? 'badge-16' : 'badge-18';
+                return `
+                    <div class="material-item">
+                        <span class="material-code">${code}</span>
+                        <div class="material-actions">
+                            <span class="badge ${badgeClass}">${thickness}mm</span>
+                            <button class="btn btn-ghost btn-sm" onclick="deleteMaterial('${code}')">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        async function deleteMaterial(code) {
+            const confirmed = await showConfirm(
+                `'${code}' malzemesini silmek istediğinize emin misiniz?`,
+                'Malzeme Sil',
+                'danger'
+            );
+            
+            if (confirmed) {
+                await api('delete_material', code);
+                await loadMaterialsPage();
+                showToast('success', 'Silindi', `${code} malzemesi silindi.`);
+            }
+        }
+
+        // ============================================
+        // SECTION 18: SETTINGS
+        // ============================================
+        async function loadSettings() {
+            state.settings = await api('get_settings');
+            
+            document.getElementById('set-height').value = state.settings.standart_yukseklik || 720;
+            document.getElementById('set-depth').value = state.settings.standart_derinlik || 580;
+            document.getElementById('set-ust-height').value = state.settings.ust_dolap_yukseklik || 720;
+            document.getElementById('set-ust-depth').value = state.settings.ust_dolap_derinlik || 330;
+            document.getElementById('set-boy-height').value = state.settings.boy_dolap_yukseklik || 2100;
+            document.getElementById('set-boy-depth').value = state.settings.boy_dolap_derinlik || 580;
+            document.getElementById('set-yan-dusum').value = state.settings.yan_dusumu || 36;
+            document.getElementById('set-sabit-dusum').value = state.settings.sabit_derinlik_dusumu || 23;
+            document.getElementById('set-raf-gen').value = state.settings.raf_genislik_dusumu || 37;
+            document.getElementById('set-raf-alt').value = state.settings.raf_derinlik_alt_dolap || 50;
+            document.getElementById('set-raf-ust').value = state.settings.raf_derinlik_ust_dolap || 40;
+            document.getElementById('set-tolerans').value = state.settings.tolerans || 5;
+            document.getElementById('set-arkalik').value = state.settings.arkalik_dusumu || 18;
+            document.getElementById('set-arkalik-icerde').value = state.settings.arkalik_icerde_dusumu || 37;
+            document.getElementById('set-ince-max').value = state.settings.arkalik_max_kalinlik || 8;
+        }
+
+        async function saveSettings() {
+            const settings = {
+                standart_yukseklik: parseInt(document.getElementById('set-height').value),
+                standart_derinlik: parseInt(document.getElementById('set-depth').value),
+                ust_dolap_yukseklik: parseInt(document.getElementById('set-ust-height').value),
+                ust_dolap_derinlik: parseInt(document.getElementById('set-ust-depth').value),
+                boy_dolap_yukseklik: parseInt(document.getElementById('set-boy-height').value),
+                boy_dolap_derinlik: parseInt(document.getElementById('set-boy-depth').value),
+                yan_dusumu: parseInt(document.getElementById('set-yan-dusum').value),
+                sabit_derinlik_dusumu: parseInt(document.getElementById('set-sabit-dusum').value),
+                raf_genislik_dusumu: parseInt(document.getElementById('set-raf-gen').value),
+                raf_derinlik_alt_dolap: parseInt(document.getElementById('set-raf-alt').value),
+                raf_derinlik_ust_dolap: parseInt(document.getElementById('set-raf-ust').value),
+                tolerans: parseInt(document.getElementById('set-tolerans').value),
+                arkalik_dusumu: parseInt(document.getElementById('set-arkalik').value),
+                arkalik_icerde_dusumu: parseInt(document.getElementById('set-arkalik-icerde').value),
+                arkalik_max_kalinlik: parseInt(document.getElementById('set-ince-max').value)
+            };
+            
+            await api('save_settings', settings);
+            closeModal('modal-settings');
+            showToast('success', 'Kaydedildi', 'Ayarlar başarıyla kaydedildi.');
+        }
+
+        // ============================================
+        // SECTION 18B: USER MANAGEMENT
+        // ============================================
+        async function loadUsersTable() {
+            try {
+                const users = await api('get_users');
+                const tbody = document.getElementById('users-table');
+                
+                if (!users || users.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted">Kullanıcı bulunamadı</td></tr>';
+                    return;
+                }
+                
+                tbody.innerHTML = users.map(user => `
+                    <tr>
+                        <td class="mono">${user.username}</td>
+                        <td>${user.display_name || user.username}</td>
+                        <td>
+                            <span class="badge ${user.is_admin ? 'badge-success' : 'badge-info'}">
+                                ${user.is_admin ? 'Admin' : 'Kullanıcı'}
+                            </span>
+                        </td>
+                        <td>
+                            ${user.username !== 'admin' ? `
+                                <button class="btn btn-ghost btn-sm" onclick="deleteUser('${user.username}')">
+                                    <i class="fas fa-trash text-danger"></i>
+                                </button>
+                            ` : '<span class="text-muted text-sm">Silinemez</span>'}
+                        </td>
+                    </tr>
+                `).join('');
+            } catch (error) {
+                console.error('Kullanıcılar yüklenirken hata:', error);
+            }
+        }
+
+        async function addUser() {
+            const username = document.getElementById('new-username').value.trim();
+            const displayName = document.getElementById('new-display').value.trim();
+            const password = document.getElementById('new-password').value;
+            const isAdmin = document.getElementById('new-admin').checked;
+            
+            if (!username || !password) {
+                showToast('warning', 'Uyarı', 'Kullanıcı adı ve şifre gerekli!');
+                return;
+            }
+            
+            if (username.length < 3) {
+                showToast('warning', 'Uyarı', 'Kullanıcı adı en az 3 karakter olmalı!');
+                return;
+            }
+            
+            if (password.length < 4) {
+                showToast('warning', 'Uyarı', 'Şifre en az 4 karakter olmalı!');
+                return;
+            }
+            
+            try {
+                const result = await api('add_user', username, password, displayName || username, isAdmin);
+                
+                if (result.success) {
+                    showToast('success', 'Başarılı', `${username} kullanıcısı eklendi.`);
+                    
+                    // Inputları temizle
+                    document.getElementById('new-username').value = '';
+                    document.getElementById('new-display').value = '';
+                    document.getElementById('new-password').value = '';
+                    document.getElementById('new-admin').checked = false;
+                    
+                    // Tabloyu yenile
+                    await loadUsersTable();
+                } else {
+                    showToast('error', 'Hata', result.error || 'Kullanıcı eklenemedi!');
+                }
+            } catch (error) {
+                showToast('error', 'Hata', 'Kullanıcı eklenirken hata oluştu!');
+            }
+        }
+
+        async function deleteUser(username) {
+            const confirmed = await showConfirm(
+                `'${username}' kullanıcısını silmek istediğinize emin misiniz?`,
+                'Kullanıcı Sil',
+                'danger'
+            );
+            
+            if (!confirmed) return;
+            
+            try {
+                const result = await api('delete_user', username);
+                
+                if (result.success) {
+                    showToast('success', 'Silindi', `${username} kullanıcısı silindi.`);
+                    await loadUsersTable();
+                } else {
+                    showToast('error', 'Hata', result.error || 'Kullanıcı silinemedi!');
+                }
+            } catch (error) {
+                showToast('error', 'Hata', 'Kullanıcı silinirken hata oluştu!');
+            }
+        }
+
+        // ============================================
+        // SECTION 18C: BACKUP FUNCTIONS
+        // ============================================
+        async function createBackup() {
+            try {
+                setStatus('Yedek alınıyor...', 'processing');
+                const result = await api('create_backup');
+                
+                if (result.success) {
+                    showToast('success', 'Başarılı', 'Yedek başarıyla oluşturuldu!');
+                    setStatus('Hazır', 'success');
+                } else {
+                    showToast('error', 'Hata', result.error || 'Yedek alınamadı!');
+                    setStatus('Hata', 'error');
+                }
+            } catch (error) {
+                showToast('error', 'Hata', 'Yedek alınırken hata oluştu!');
+                setStatus('Hata', 'error');
+            }
+        }
+
+        async function restoreBackup() {
+            const confirmed = await showConfirm(
+                'Yedek geri yüklenecek. Mevcut veriler değiştirilecek. Devam etmek istiyor musunuz?',
+                'Yedek Geri Yükle',
+                'warning'
+            );
+            
+            if (!confirmed) return;
+            
+            try {
+                setStatus('Yedek yükleniyor...', 'processing');
+                const result = await api('restore_backup');
+                
+                if (result.success) {
+                    showToast('success', 'Başarılı', 'Yedek başarıyla geri yüklendi!');
+                    setStatus('Hazır', 'success');
+                    // Verileri yenile
+                    await loadDashboardData();
+                    await loadUsersTable();
+                } else {
+                    showToast('error', 'Hata', result.error || 'Yedek yüklenemedi!');
+                    setStatus('Hata', 'error');
+                }
+            } catch (error) {
+                showToast('error', 'Hata', 'Yedek yüklenirken hata oluştu!');
+                setStatus('Hata', 'error');
+            }
+        }
+
+        // ============================================
+        // SECTION 18D: CLEAR MATERIALS
+        // ============================================
+        async function clearAllMaterials() {
+            const confirmed = await showConfirm(
+                'Tüm malzemeler silinecek. Bu işlem geri alınamaz. Devam etmek istiyor musunuz?',
+                'Tüm Malzemeleri Sil',
+                'danger'
+            );
+            
+            if (!confirmed) return;
+            
+            try {
+                await api('clear_materials');
+                showToast('success', 'Silindi', 'Tüm malzemeler silindi.');
+                await loadMaterialsPage();
+            } catch (error) {
+                showToast('error', 'Hata', 'Malzemeler silinirken hata oluştu!');
+            }
+        }
+
+        // ============================================
+        // SECTION 18E: OUTPUT SETTINGS (Çıktı Ayarları)
+        // ============================================
+        async function openOutputSettings() {
+            if (!state.currentFile || !state.currentFile.path) {
+                showToast('warning', 'Uyarı', 'Önce bir dosya seçin!');
+                return;
+            }
+            
+            setStatus('Parça tipleri yükleniyor...', 'processing');
+            
+            try {
+                // Önce bilinmeyen malzemeleri kontrol et
+                const checkResult = await api('check_file', state.currentFile.path);
+                
+                if (!checkResult.success) {
+                    showToast('error', 'Hata', checkResult.error);
+                    setStatus('Hata', 'error');
+                    return;
+                }
+                
+                // Bilinmeyen malzemeler varsa önce onları sor
+                if (checkResult.unknown && checkResult.unknown.length > 0) {
+                    state.unknownMaterials = checkResult.unknown;
+                    state.currentMaterialIndex = 0;
+                    state.afterMaterialsAction = 'openOutputSettings'; // Malzemelerden sonra ne yapılacak
+                    showMaterialDialog();
+                    return;
+                }
+                
+                // Parça tiplerini al
+                const result = await api('get_part_types', state.currentFile.path);
+                
+                if (!result.success) {
+                    showToast('error', 'Hata', result.error);
+                    setStatus('Hata', 'error');
+                    return;
+                }
+                
+                state.partTypes = result.part_types;
+                renderPartTypesGrid();
+                updateSelectedPartsCount();
+                
+                setStatus('Hazır', 'success');
+                openModal('modal-output-settings');
+                
+            } catch (error) {
+                showToast('error', 'Hata', error.message || 'Parça tipleri yüklenemedi!');
+                setStatus('Hata', 'error');
+            }
+        }
+        
+        function renderPartTypesGrid() {
+            const container = document.getElementById('part-types-grid');
+            
+            if (!state.partTypes || state.partTypes.length === 0) {
+                container.innerHTML = '<p class="text-muted text-center">Parça tipi bulunamadı</p>';
+                return;
+            }
+            
+            // İnce malzeme tipleri (8mm ve altı)
+            const thinTypes = ['ARKALIK', 'ÇEKMECE ALTI'];
+            
+            container.innerHTML = state.partTypes.map((pt, index) => {
+                const isThin = thinTypes.includes(pt.name);
+                const badgeClass = isThin ? 'thin' : 'body';
+                const badgeText = isThin ? 'İnce' : 'Gövde';
+                
+                return `
+                    <div class="part-type-item ${pt.selected ? 'selected' : ''}" onclick="togglePartType(${index})">
+                        <input type="checkbox" ${pt.selected ? 'checked' : ''} onclick="event.stopPropagation(); togglePartType(${index})">
+                        <div class="part-type-info">
+                            <span class="part-type-name">${pt.name}</span>
+                            <span class="part-type-count">${pt.count} parça</span>
+                        </div>
+                        <span class="part-type-badge ${badgeClass}">${badgeText}</span>
+                    </div>
+                `;
+            }).join('');
+        }
+        
+        function togglePartType(index) {
+            state.partTypes[index].selected = !state.partTypes[index].selected;
+            renderPartTypesGrid();
+            updateSelectedPartsCount();
+        }
+        
+        function selectAllPartTypes() {
+            state.partTypes.forEach(pt => pt.selected = true);
+            renderPartTypesGrid();
+            updateSelectedPartsCount();
+        }
+        
+        function deselectAllPartTypes() {
+            state.partTypes.forEach(pt => pt.selected = false);
+            renderPartTypesGrid();
+            updateSelectedPartsCount();
+        }
+        
+        function updateSelectedPartsCount() {
+            const totalSelected = state.partTypes
+                .filter(pt => pt.selected)
+                .reduce((sum, pt) => sum + pt.count, 0);
+            document.getElementById('selected-parts-count').textContent = totalSelected;
+        }
+        
+        async function applyOutputSettingsAndAnalyze() {
+            const selectedTypes = state.partTypes
+                .filter(pt => pt.selected)
+                .map(pt => pt.name);
+            
+            if (selectedTypes.length === 0) {
+                showToast('warning', 'Uyarı', 'En az bir parça tipi seçmelisiniz!');
+                return;
+            }
+            
+            closeModal('modal-output-settings');
+            
+            setStatus('İşleniyor...', 'processing');
+            showProgress(true);
+            updateProgress(50, 'Analiz ediliyor...');
+            
+            try {
+                const result = await api('analyze_and_export_filtered', state.currentFile.path, selectedTypes);
+                
+                updateProgress(100, 'Tamamlandı!');
+                
+                if (result.success) {
+                    setStatus('Tamamlandı', 'success');
+                    showToast('success', 'Başarılı', 'Kesim listesi oluşturuldu!');
+                    showResultsModal(result);
+                    await loadDashboardData();
+                    
+                    setTimeout(() => {
+                        resetFileInput();
+                        showProgress(false);
+                    }, 1500);
+                } else {
+                    showToast('error', 'Hata', result.error);
+                    showProgress(false);
+                    setStatus('Hata', 'error');
+                }
+            } catch (error) {
+                showToast('error', 'Hata', error.message || 'Analiz sırasında hata oluştu!');
+                showProgress(false);
+                setStatus('Hata', 'error');
+            }
+        }
+
+        // ============================================
+        // SECTION 19: EVENT LISTENERS
+        // ============================================
+        function setupEventListeners() {
+            // Helper function for safe event binding
+            const safeAddEvent = (id, event, handler) => {
+                const el = document.getElementById(id);
+                if (el) el.addEventListener(event, handler);
+            };
+            
+            // Login form
+            safeAddEvent('login-form', 'submit', handleLogin);
+            
+            // Theme toggle
+            safeAddEvent('theme-toggle', 'click', toggleTheme);
+            
+            // Language toggle
+            const langToggle = document.getElementById('lang-toggle');
+            if (langToggle) {
+                langToggle.addEventListener('click', () => {
+                    state.lang = state.lang === 'tr' ? 'en' : 'tr';
+                    const span = langToggle.querySelector('span');
+                    if (span) span.textContent = state.lang.toUpperCase();
+                    updateLanguage();
+                });
+            }
+            
+            // Navigation
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const page = btn.dataset.page;
+                    showPage(page);
+                    
+                    if (page === 'history') loadHistoryPage();
+                    if (page === 'materials') loadMaterialsPage();
+                });
+            });
+            
+            // Settings button
+            safeAddEvent('settings-btn', 'click', () => {
+                loadSettings();
+                loadUsersTable();
+                openModal('modal-settings');
+            });
+            
+            // User management button
+            safeAddEvent('btn-add-user', 'click', addUser);
+            
+            // Backup buttons
+            safeAddEvent('btn-backup', 'click', createBackup);
+            safeAddEvent('btn-restore', 'click', restoreBackup);
+            
+            // Clear materials button
+            safeAddEvent('btn-clear-materials', 'click', clearAllMaterials);
+            
+            // Logout
+            safeAddEvent('logout-btn', 'click', async () => {
+                const confirmed = await showConfirm(
+                    'Çıkış yapmak istediğinize emin misiniz?',
+                    'Çıkış Yap',
+                    'warning'
+                );
+                if (confirmed) {
+                    logout();
+                }
+            });
+            
+            // Close modal buttons
+            document.querySelectorAll('[data-close-modal]').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    btn.closest('.modal-overlay').classList.remove('active');
+                });
+            });
+            
+            // Modal overlay click
+            document.querySelectorAll('.modal-overlay').forEach(overlay => {
+                overlay.addEventListener('click', (e) => {
+                    if (e.target === overlay) {
+                        overlay.classList.remove('active');
+                    }
+                });
+            });
+            
+            // Tab buttons
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const tabId = btn.dataset.tab;
+                    const tabContainer = btn.closest('.modal-body') || btn.closest('.page');
+                    
+                    tabContainer.querySelectorAll('.tab-btn').forEach(t => t.classList.remove('active'));
+                    tabContainer.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                    
+                    btn.classList.add('active');
+                    const tabContent = document.getElementById(tabId);
+                    if (tabContent) tabContent.classList.add('active');
+                    
+                    // Kullanıcılar tabına geçildiğinde listeyi yükle
+                    if (tabId === 'settings-users') {
+                        loadUsersTable();
+                    }
+                });
+            });
+            
+            // Analyze button
+            safeAddEvent('btn-analyze', 'click', analyzeFile);
+            
+            // Batch process button
+            safeAddEvent('btn-quick-analyze', 'click', quickAnalyze);
+            
+            // Save and Export button (Results modal)
+            safeAddEvent('btn-save-and-export', 'click', saveAndExport);
+            
+            // Thickness selection
+            document.querySelectorAll('.thickness-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const thickness = parseInt(btn.dataset.thickness);
+                    selectThickness(thickness);
+                });
+            });
+            
+            // Save settings
+            safeAddEvent('btn-save-settings', 'click', saveSettings);
+            
+            // History search
+            const historySearch = document.getElementById('history-search');
+            if (historySearch) {
+                historySearch.addEventListener('input', (e) => {
+                    renderHistoryList(e.target.value);
+                });
+            }
+            
+            // Materials search
+            const materialSearch = document.getElementById('material-search');
+            if (materialSearch) {
+                materialSearch.addEventListener('input', (e) => {
+                    renderMaterialsList(e.target.value);
+                });
+            }
+            
+            // Open Excel - element varsa bağla
+            const btnOpenExcel = document.getElementById('btn-open-excel');
+            if (btnOpenExcel) {
+                btnOpenExcel.addEventListener('click', async () => {
+                    if (state.currentOutputPath) {
+                        await api('open_file', state.currentOutputPath);
+                    }
+                });
+            }
+            
+            // Job Detail Modal buttons - sadece varsa bağla
+            const btnReprocess = document.getElementById('btn-reprocess');
+            const btnOpenJobExcel = document.getElementById('btn-open-job-excel');
+            if (btnReprocess) btnReprocess.addEventListener('click', reprocessJob);
+            if (btnOpenJobExcel) btnOpenJobExcel.addEventListener('click', openJobExcel);
+            
+            // Keyboard shortcuts
+            document.addEventListener('keydown', (e) => {
+                if (e.ctrlKey && e.key === 'o') {
+                    e.preventDefault();
+                    selectFilesWithPyWebview();
+                }
+                if (e.ctrlKey && e.key === 's') {
+                    e.preventDefault();
+                    analyzeFile();
+                }
+                if (e.key === 'Escape') {
+                    closeAllModals();
+                }
+            });
+        }
+
+        // ============================================
+        // SECTION 20: INITIALIZATION
+        // ============================================
+        function init() {
+            // Load saved theme
+            const savedTheme = localStorage.getItem('core-theme') || 'light';
+            setTheme(savedTheme);
+            
+            // Setup components
+            setupDropZone();
+            setupEventListeners();
+            updateLanguage();
+            
+            // Focus username field
+            setTimeout(() => {
+                document.getElementById('username').focus();
+            }, 100);
+            
+            console.log('CORE v3.5 initialized');
+        }
+
+        // Start app
+        document.addEventListener('DOMContentLoaded', init);
+        
+        // PyWebview ready event
+        window.addEventListener('pywebviewready', async () => {
+            console.log('PyWebview ready');
+        });
+    </script>
+</body>
+</html>

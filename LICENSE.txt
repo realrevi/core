@@ -1,0 +1,11 @@
+CORE v3.5 - Lisans Sözleşmesi
+==============================
+
+Bu yazılım [Şirket Adı] tarafından geliştirilmiştir.
+
+Kullanım Koşulları:
+- Bu yazılım yalnızca lisanslı kullanıcılar tarafından kullanılabilir.
+- Yazılımın kopyalanması, dağıtılması veya değiştirilmesi yasaktır.
+- Yazılım "olduğu gibi" sağlanmaktadır, herhangi bir garanti verilmemektedir.
+
+© 2025 Tüm hakları saklıdır.

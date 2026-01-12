@@ -1,0 +1,23 @@
+# CORE v3.0 - Requirements
+# ================================
+
+# Web UI Framework (required)
+pywebview>=4.0
+
+# Excel Processing (required)
+pandas>=2.0
+openpyxl>=3.0
+
+# Password Hashing (recommended)
+bcrypt>=4.0
+
+# PDF Export (optional)
+reportlab>=4.0
+
+# For building executable
+pyinstaller>=6.0
+
+# Development dependencies (optional)
+# pytest>=7.0
+# black>=23.0
+# flake8>=6.0
