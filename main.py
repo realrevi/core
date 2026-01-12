@@ -501,7 +501,7 @@ class UserManager:
         else:
             return hashlib.sha256(password.encode()).hexdigest() == hashed
 
-    def login(self, username: str, password: str) -> Dict:
+    def login(self, username: str, password: str, remember_me: bool = False) -> Dict:
         users = self._get_users()
         if username not in users:
             return {'success': False, 'error': 'Kullanıcı bulunamadı'}
@@ -510,11 +510,17 @@ class UserManager:
         if not self._verify_password(password, user['password']):
             return {'success': False, 'error': 'Şifre hatalı'}
 
-        return {
+        result = {
             'success': True,
             'user': user.get('display_name', username),
             'is_admin': user.get('is_admin', False)
         }
+        
+        # Beni Hatırla seçiliyse token oluştur
+        if remember_me:
+            result['session_token'] = self.generate_session_token(username)
+        
+        return result
 
     def _create_user(self, username: str, password: str,
                      display_name: str = '', is_admin: bool = False) -> bool:
@@ -554,6 +560,101 @@ class UserManager:
             'display_name': v.get('display_name', k),
             'is_admin': v.get('is_admin', False)
         } for k, v in users.items()]
+    
+    # === Session Token Functions (Beni Hatırla) ===
+    def generate_session_token(self, username: str) -> str:
+        """Kullanıcı için benzersiz session token oluştur"""
+        import secrets
+        token = secrets.token_urlsafe(32)
+        
+        users = self._get_users()
+        if username in users:
+            users[username]['session_token'] = token
+            self._save_users(users)
+        
+        return token
+    
+    def verify_session_token(self, username: str, token: str) -> Dict:
+        """Token ile kullanıcı doğrula"""
+        users = self._get_users()
+        if username not in users:
+            return {'success': False, 'error': 'Kullanıcı bulunamadı'}
+        
+        user = users[username]
+        stored_token = user.get('session_token')
+        
+        if not stored_token or stored_token != token:
+            return {'success': False, 'error': 'Token geçersiz'}
+        
+        return {
+            'success': True,
+            'user': user.get('display_name', username),
+            'is_admin': user.get('is_admin', False)
+        }
+    
+    def clear_session_token(self, username: str) -> bool:
+        """Çıkış yaparken token'ı temizle"""
+        users = self._get_users()
+        if username in users:
+            users[username]['session_token'] = None
+            self._save_users(users)
+            # Oturum dosyasını da temizle
+            self._clear_session_file()
+            return True
+        return False
+    
+    # === Session File (PyWebview localStorage persist etmiyor) ===
+    def _get_session_file_path(self) -> Path:
+        """Oturum dosyası yolu"""
+        return Config.get_data_dir() / 'core_session.json'
+    
+    def save_session_file(self, username: str, token: str) -> bool:
+        """Oturumu dosyaya kaydet"""
+        try:
+            session_data = {
+                'username': username,
+                'token': token
+            }
+            with open(str(self._get_session_file_path()), 'w', encoding='utf-8') as f:
+                json.dump(session_data, f, ensure_ascii=False)
+            return True
+        except Exception as e:
+            print(f"Session save error: {e}")
+            return False
+    
+    def load_session_file(self) -> Dict:
+        """Kaydedilmiş oturumu oku"""
+        try:
+            session_path = self._get_session_file_path()
+            if not session_path.exists():
+                return {'success': False, 'error': 'Kayıtlı oturum yok'}
+            
+            with open(str(session_path), 'r', encoding='utf-8') as f:
+                session_data = json.load(f)
+            
+            username = session_data.get('username')
+            token = session_data.get('token')
+            
+            if not username or not token:
+                return {'success': False, 'error': 'Geçersiz oturum verisi'}
+            
+            # Token'ı doğrula
+            return self.verify_session_token(username, token)
+        except Exception as e:
+            print(f"Session load error: {e}")
+            return {'success': False, 'error': str(e)}
+    
+    def _clear_session_file(self) -> bool:
+        """Oturum dosyasını sil"""
+        try:
+            session_path = self._get_session_file_path()
+            if session_path.exists():
+                session_path.unlink()
+            return True
+        except:
+            return False
+
+
 
 # ============================================================
 # EXCEL ANALYZER - BELGEYE UYGUN VERSİYON
@@ -1707,8 +1808,27 @@ class Api:
         self.analyzer = ExcelAnalyzer(self.jsondata, self.custom_modules)
 
     # === User Management ===
-    def login(self, username: str, password: str) -> Dict:
-        return self.usermgr.login(username, password)
+    def login(self, username: str, password: str, remember_me: bool = False) -> Dict:
+        result = self.usermgr.login(username, password, remember_me)
+        
+        # Beni Hatırla seçiliyse oturumu dosyaya kaydet
+        if result.get('success') and remember_me and result.get('session_token'):
+            self.usermgr.save_session_file(username, result['session_token'])
+        
+        return result
+    
+    def login_with_token(self, username: str, token: str) -> Dict:
+        """Token ile otomatik giriş (Beni Hatırla)"""
+        return self.usermgr.verify_session_token(username, token)
+    
+    def check_saved_session(self) -> Dict:
+        """Dosyadan kayıtlı oturumu kontrol et ve doğrula"""
+        return self.usermgr.load_session_file()
+    
+    def logout_user(self, username: str) -> Dict:
+        """Çıkış yap ve token'ı temizle"""
+        self.usermgr.clear_session_token(username)
+        return {'success': True}
 
     def add_user(self, username: str, password: str, display_name: str = '', is_admin: bool = False) -> Dict:
         return self.usermgr.add_user(username, password, display_name, is_admin)
