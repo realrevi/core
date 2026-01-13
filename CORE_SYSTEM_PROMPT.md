@@ -1,4 +1,4 @@
-# CORE v3.5 - Sistem Prompt Dokümantasyonu
+# CORE v3.6 - Sistem Prompt Dokümantasyonu
 
 > **Cut Optimization & Reporting Engine**  
 > Mobilya üretimi için Excel kesim listesi analiz ve optimizasyon yazılımı
@@ -27,7 +27,7 @@
 ## 1. GENEL BAKIŞ
 
 ### 1.1 Uygulama Amacı
-CORE, mobilya üretim tesislerinde kullanılan Excel kesim listelerini analiz eder ve optimize edilmiş çıktı üretir. Parçaları otomatik olarak sınıflandırır, malzeme kalınlıklarını yönetir ve yan yana tablolu Excel çıktısı oluşturur.
+CORE, mobilya üretim tesislerinde kullanılan Excel kesim listelerini analiz eder ve optimize edilmiş çıktı üretir. Parçaları otomatik olarak sınıflandırır, malzeme kalınlıklarını yönetir ve kalınlığa göre gruplandırılmış 3 tablolu Excel çıktısı oluşturur.
 
 ### 1.2 Teknoloji Stack
 ```
@@ -43,7 +43,9 @@ Excel:    pandas + openpyxl
 - Malzeme kalınlık hafızası (öğrenme sistemi)
 - Kanallı/Kanalsız parça yönetimi
 - Manuel düzenleme + öğrenme
-- Yan yana tablolu Excel çıktısı (Gövde | İnce)
+- **3 tablolu Excel çıktısı (18mm | 16mm | 8mm)** - kalınlığa göre yan yana
+- **Toplu Dolap Ayarları** (Alt/Üst/Boy dolap ölçüleri)
+- POZ bazlı özel modül ayarları
 - İş geçmişi ve birleştirme
 - Çoklu dil desteği (TR/EN)
 - Koyu/Açık tema
@@ -544,6 +546,47 @@ const rules = [
 ];
 const result = await api('save_learned_parts', rules);
 // Returns: { success, saved_count }
+```
+
+### 7.5 Toplu Dolap Ayarları (Cabinet Settings)
+
+```javascript
+// Mevcut dolap ayarlarını getir
+const settings = await api('get_cabinet_settings');
+// Returns: {
+//     alt: { yukseklik: 720, derinlik: 580 },
+//     ust: { yukseklik: 720, derinlik: 330 },
+//     boy: { yukseklik: 2100, derinlik: 580 }
+// }
+
+// Tek bir dolap tipini güncelle
+await api('set_cabinet_settings', 'ust', { yukseklik: 600, derinlik: 330 });
+await api('set_cabinet_settings', 'alt', { derinlik: 560 });
+// Returns: { success, cabinet_settings }
+
+// Tüm dolap ayarlarını varsayılana sıfırla
+await api('reset_cabinet_settings');
+// Returns: { success, cabinet_settings }
+```
+
+### 7.6 POZ Özel Modül Ayarları
+
+```javascript
+// POZ için özel modül değerleri ayarla
+await api('set_custom_module', 'POZ_01', {
+    genislik: 600,
+    yukseklik: 800,
+    derinlik: 400
+});
+// Returns: { success }
+
+// Tüm özel modül ayarlarını getir
+const modules = await api('get_custom_modules');
+// Returns: { "POZ_01": { genislik, yukseklik, derinlik }, ... }
+
+// Tüm özel ayarları temizle
+await api('clear_custom_depths');
+// Returns: { success }
 ```
 
 ---
