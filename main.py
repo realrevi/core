@@ -1198,9 +1198,10 @@ class ExcelAnalyzer:
             group_cols = ['KALINLIK', 'MALZEME', 'BOY', 'EN', 'PARÇA TİPİ']
             summary = result_df.groupby(group_cols).agg({'ADET': 'sum'}).reset_index()
             
-            # Kalınlığa göre ayır
-            body_df = summary[summary['KALINLIK'] > ARKALIK_KALINLIK].copy()
-            thin_df = summary[summary['KALINLIK'] <= ARKALIK_KALINLIK].copy()
+            # Kalınlığa göre 3 tabloya ayır (18mm, 16mm, 8mm)
+            df_18mm = summary[summary['KALINLIK'] == 18].copy()
+            df_16mm = summary[summary['KALINLIK'] == 16].copy()
+            df_8mm = summary[summary['KALINLIK'] <= 8].copy()
             
             # PARÇA TİPİ'ne göre sırala - aynı tipler alt alta gelsin
             part_type_order = [
@@ -1226,12 +1227,13 @@ class ExcelAnalyzer:
                 df = df.drop(columns=['_sort_order'])
                 return df
             
-            body_df = sort_by_part_type(body_df)
-            thin_df = sort_by_part_type(thin_df)
+            df_18mm = sort_by_part_type(df_18mm)
+            df_16mm = sort_by_part_type(df_16mm)
+            df_8mm = sort_by_part_type(df_8mm)
 
 
             # ============================================================
-            # EXCEL'E YAZI - TEK SHEET'TE YAN YANA
+            # EXCEL'E YAZI - TEK SHEET'TE 3 TABLO YAN YANA
             # ============================================================
             
             from openpyxl import Workbook
@@ -1242,10 +1244,11 @@ class ExcelAnalyzer:
             worksheet = workbook.active
             worksheet.title = 'Kesim Listesi'
             
-            # Stil tanımları
+            # Stil tanımları - 3 farklı renk
             header_font = Font(bold=True, color='FFFFFF')
-            header_fill_body = PatternFill(start_color='4472C4', end_color='4472C4', fill_type='solid')
-            header_fill_thin = PatternFill(start_color='70AD47', end_color='70AD47', fill_type='solid')
+            header_fill_18mm = PatternFill(start_color='4472C4', end_color='4472C4', fill_type='solid')  # Mavi
+            header_fill_16mm = PatternFill(start_color='8B5CF6', end_color='8B5CF6', fill_type='solid')  # Mor
+            header_fill_8mm = PatternFill(start_color='70AD47', end_color='70AD47', fill_type='solid')   # Yeşil
             title_font = Font(bold=True, size=14)
             thin_border = Border(
                 left=Side(style='thin'),
@@ -1257,91 +1260,79 @@ class ExcelAnalyzer:
             # Sütun sıralaması
             column_order = ['KALINLIK', 'MALZEME', 'BOY', 'EN', 'PARÇA TİPİ', 'ADET']
             
-            # Body DataFrame'i sırala
-            if not body_df.empty:
-                body_cols = [c for c in column_order if c in body_df.columns]
-                body_df = body_df[body_cols]
+            # DataFrame'leri sütun sırasına göre düzenle
+            for df in [df_18mm, df_16mm, df_8mm]:
+                if not df.empty:
+                    cols = [c for c in column_order if c in df.columns]
+                    df = df[cols]
             
-            # Thin DataFrame'i sırala
-            if not thin_df.empty:
-                thin_cols = [c for c in column_order if c in thin_df.columns]
-                thin_df = thin_df[thin_cols]
+            # Sabit sütun sayısı
+            cols_count = 6
+            table_gap = 1  # Tablolar arası boşluk
             
-            current_row = 1
-            body_cols_count = len(body_df.columns) if not body_df.empty else 6
-            
-            # ========== SOL TABLO: GÖVDE PARÇALAR ==========
-            worksheet.cell(row=current_row, column=1, value='GÖVDE PARÇALAR')
-            worksheet.cell(row=current_row, column=1).font = title_font
-            if body_cols_count > 1:
-                worksheet.merge_cells(start_row=current_row, start_column=1, end_row=current_row, end_column=body_cols_count)
-            
-            current_row += 1
-            
-            if not body_df.empty:
-                for col_idx, col_name in enumerate(body_df.columns, 1):
-                    cell = worksheet.cell(row=current_row, column=col_idx, value=col_name)
+            def write_table(ws, start_col, df, title, header_fill):
+                """Tek bir tabloyu belirtilen sütundan başlayarak yaz"""
+                current_row = 1
+                
+                # Başlık
+                ws.cell(row=current_row, column=start_col, value=title)
+                ws.cell(row=current_row, column=start_col).font = title_font
+                if cols_count > 1:
+                    ws.merge_cells(start_row=current_row, start_column=start_col, 
+                                  end_row=current_row, end_column=start_col + cols_count - 1)
+                
+                current_row += 1
+                
+                # Header satırı
+                header_names = ['KALINLIK', 'MALZEME', 'BOY', 'EN', 'PARÇA TİPİ', 'ADET']
+                for col_idx, col_name in enumerate(header_names):
+                    cell = ws.cell(row=current_row, column=start_col + col_idx, value=col_name)
                     cell.font = header_font
-                    cell.fill = header_fill_body
+                    cell.fill = header_fill
                     cell.alignment = Alignment(horizontal='center')
                     cell.border = thin_border
                 
                 current_row += 1
                 
-                for row_data in body_df.values:
-                    for col_idx, value in enumerate(row_data, 1):
-                        cell = worksheet.cell(row=current_row, column=col_idx, value=value)
-                        cell.border = thin_border
-                        cell.alignment = Alignment(horizontal='center')
+                # Veri satırları
+                if not df.empty:
+                    # DataFrame sütunlarını sırala
+                    df_ordered = df.copy()
+                    existing_cols = [c for c in column_order if c in df_ordered.columns]
+                    df_ordered = df_ordered[existing_cols]
+                    
+                    for row_data in df_ordered.values:
+                        for col_idx, value in enumerate(row_data):
+                            cell = ws.cell(row=current_row, column=start_col + col_idx, value=value)
+                            cell.border = thin_border
+                            cell.alignment = Alignment(horizontal='center')
+                        current_row += 1
+                else:
+                    ws.cell(row=current_row, column=start_col, value='(Veri yok)')
                     current_row += 1
-            else:
-                worksheet.cell(row=current_row, column=1, value='(Veri yok)')
-                current_row += 1
-            
-            # ========== SAĞ TABLO: İNCE PARÇALAR ==========
-            right_start_col = body_cols_count + 2
-            current_row = 1
-            
-            worksheet.cell(row=current_row, column=right_start_col, value='İNCE PARÇALAR (ARKALIK)')
-            worksheet.cell(row=current_row, column=right_start_col).font = title_font
-            thin_cols_count = len(thin_df.columns) if not thin_df.empty else 6
-            if thin_cols_count > 1:
-                worksheet.merge_cells(start_row=current_row, start_column=right_start_col, 
-                                     end_row=current_row, end_column=right_start_col + thin_cols_count - 1)
-            
-            current_row += 1
-            
-            if not thin_df.empty:
-                for col_idx, col_name in enumerate(thin_df.columns):
-                    cell = worksheet.cell(row=current_row, column=right_start_col + col_idx, value=col_name)
-                    cell.font = header_font
-                    cell.fill = header_fill_thin
-                    cell.alignment = Alignment(horizontal='center')
-                    cell.border = thin_border
                 
-                current_row += 1
-                
-                for row_data in thin_df.values:
-                    for col_idx, value in enumerate(row_data):
-                        cell = worksheet.cell(row=current_row, column=right_start_col + col_idx, value=value)
-                        cell.border = thin_border
-                        cell.alignment = Alignment(horizontal='center')
-                    current_row += 1
-            else:
-                worksheet.cell(row=current_row, column=right_start_col, value='(Veri yok)')
-                current_row += 1
+                return current_row
+            
+            # ========== 1. TABLO: 18mm PARÇALAR (Mavi) ==========
+            col_18mm_start = 1
+            write_table(worksheet, col_18mm_start, df_18mm, '18mm Parçalar', header_fill_18mm)
+            
+            # ========== 2. TABLO: 16mm PARÇALAR (Mor) ==========
+            col_16mm_start = col_18mm_start + cols_count + table_gap
+            write_table(worksheet, col_16mm_start, df_16mm, '16mm Parçalar', header_fill_16mm)
+            
+            # ========== 3. TABLO: 8mm PARÇALAR (Yeşil) ==========
+            col_8mm_start = col_16mm_start + cols_count + table_gap
+            write_table(worksheet, col_8mm_start, df_8mm, '8mm Parçalar', header_fill_8mm)
             
             # Sütun genişliklerini ayarla
-            for col_idx in range(1, body_cols_count + 1):
-                worksheet.column_dimensions[get_column_letter(col_idx)].width = 15
-            
-            for col_idx in range(right_start_col, right_start_col + thin_cols_count):
+            for col_idx in range(1, col_8mm_start + cols_count + 1):
                 worksheet.column_dimensions[get_column_letter(col_idx)].width = 15
             
             # İstatistikler
-            govde_18 = int(summary[summary['KALINLIK'] == 18]['ADET'].sum()) if not summary.empty else 0
-            cekmece_16 = int(summary[summary['KALINLIK'] == 16]['ADET'].sum()) if not summary.empty else 0
-            arkalik_8 = int(summary[summary['KALINLIK'] == 8]['ADET'].sum()) if not summary.empty else 0
+            govde_18 = int(df_18mm['ADET'].sum()) if not df_18mm.empty else 0
+            cekmece_16 = int(df_16mm['ADET'].sum()) if not df_16mm.empty else 0
+            arkalik_8 = int(df_8mm['ADET'].sum()) if not df_8mm.empty else 0
             
             # Excel dosyasını kaydet
             workbook.save(output_path)
@@ -1362,8 +1353,9 @@ class ExcelAnalyzer:
                     'cekmece_16': cekmece_16,
                     'arkalik_8': arkalik_8
                 },
-                'body': body_df.to_dict('records') if not body_df.empty else [],
-                'thin': thin_df.to_dict('records') if not thin_df.empty else []
+                'body': df_18mm.to_dict('records') if not df_18mm.empty else [],
+                'thin': df_8mm.to_dict('records') if not df_8mm.empty else [],
+                'df_16mm': df_16mm.to_dict('records') if not df_16mm.empty else []
             }
             
         except Exception as e:
@@ -2380,8 +2372,7 @@ class Api:
             output_path = result if isinstance(result, str) else result[0]
             
             # DataFrame'lere dönüştür
-            body_df = pd.DataFrame(body_data) if body_data else pd.DataFrame()
-            thin_df = pd.DataFrame(thin_data) if thin_data else pd.DataFrame()
+            all_data_df = pd.DataFrame(body_data + thin_data) if (body_data or thin_data) else pd.DataFrame()
             
             # Kanallı parçaların tipine (K) ekle
             def add_kanalli_to_type(df):
@@ -2394,8 +2385,17 @@ class Api:
                     )
                 return df
             
-            body_df = add_kanalli_to_type(body_df)
-            thin_df = add_kanalli_to_type(thin_df)
+            all_data_df = add_kanalli_to_type(all_data_df)
+            
+            # Kalınlığa göre 3 tabloya ayır
+            if not all_data_df.empty and 'KALINLIK' in all_data_df.columns:
+                df_18mm = all_data_df[all_data_df['KALINLIK'] == 18].copy()
+                df_16mm = all_data_df[all_data_df['KALINLIK'] == 16].copy()
+                df_8mm = all_data_df[all_data_df['KALINLIK'] <= 8].copy()
+            else:
+                df_18mm = pd.DataFrame()
+                df_16mm = pd.DataFrame()
+                df_8mm = pd.DataFrame()
             
             # PARÇA TİPİ'ne göre sırala - aynı tipler alt alta gelsin
             part_type_order = [
@@ -2414,7 +2414,6 @@ class Api:
             def sort_by_part_type(df):
                 if df.empty or 'PARÇA TİPİ' not in df.columns:
                     return df
-                # Sıralama için index oluştur
                 df['_sort_order'] = df['PARÇA TİPİ'].apply(
                     lambda x: part_type_order.index(x) if x in part_type_order else 999
                 )
@@ -2422,10 +2421,11 @@ class Api:
                 df = df.drop(columns=['_sort_order'])
                 return df
             
-            body_df = sort_by_part_type(body_df)
-            thin_df = sort_by_part_type(thin_df)
+            df_18mm = sort_by_part_type(df_18mm)
+            df_16mm = sort_by_part_type(df_16mm)
+            df_8mm = sort_by_part_type(df_8mm)
             
-            # Excel'e yaz - TEK SHEET'TE YAN YANA (doğrudan openpyxl ile)
+            # Excel'e yaz - TEK SHEET'TE 3 TABLO YAN YANA
             from openpyxl import Workbook
             from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
             from openpyxl.utils import get_column_letter
@@ -2434,10 +2434,11 @@ class Api:
             worksheet = workbook.active
             worksheet.title = 'Kesim Listesi'
             
-            # Stil tanımları
+            # Stil tanımları - 3 farklı renk
             header_font = Font(bold=True, color='FFFFFF')
-            header_fill_body = PatternFill(start_color='4472C4', end_color='4472C4', fill_type='solid')
-            header_fill_thin = PatternFill(start_color='70AD47', end_color='70AD47', fill_type='solid')
+            header_fill_18mm = PatternFill(start_color='4472C4', end_color='4472C4', fill_type='solid')  # Mavi
+            header_fill_16mm = PatternFill(start_color='8B5CF6', end_color='8B5CF6', fill_type='solid')  # Mor
+            header_fill_8mm = PatternFill(start_color='70AD47', end_color='70AD47', fill_type='solid')   # Yeşil
             title_font = Font(bold=True, size=14)
             thin_border = Border(
                 left=Side(style='thin'),
@@ -2447,109 +2448,81 @@ class Api:
             )
             
             # KANALLI sütununu çıkar (artık parça tipine eklendi)
-            if not body_df.empty and 'KANALLI' in body_df.columns:
-                body_df = body_df.drop(columns=['KANALLI'])
-            if not thin_df.empty and 'KANALLI' in thin_df.columns:
-                thin_df = thin_df.drop(columns=['KANALLI'])
+            for df in [df_18mm, df_16mm, df_8mm]:
+                if not df.empty and 'KANALLI' in df.columns:
+                    df.drop(columns=['KANALLI'], inplace=True)
             
             # Sütun sıralaması
             column_order = ['KALINLIK', 'MALZEME', 'BOY', 'EN', 'PARÇA TİPİ', 'ADET']
+            cols_count = 6
+            table_gap = 1  # Tablolar arası boşluk
             
-            # Body DataFrame'i sırala
-            if not body_df.empty:
-                body_cols = [c for c in column_order if c in body_df.columns]
-                body_df = body_df[body_cols]
-            
-            # Thin DataFrame'i sırala
-            if not thin_df.empty:
-                thin_cols = [c for c in column_order if c in thin_df.columns]
-                thin_df = thin_df[thin_cols]
-            
-            current_row = 1
-            body_cols_count = len(body_df.columns) if not body_df.empty else 6
-            
-            # ========== SOL TABLO: GÖVDE PARÇALAR ==========
-            # Başlık
-            worksheet.cell(row=current_row, column=1, value='GÖVDE PARÇALAR')
-            worksheet.cell(row=current_row, column=1).font = title_font
-            if body_cols_count > 1:
-                worksheet.merge_cells(start_row=current_row, start_column=1, end_row=current_row, end_column=body_cols_count)
-            
-            current_row += 1
-            
-            # Header
-            if not body_df.empty:
-                for col_idx, col_name in enumerate(body_df.columns, 1):
-                    cell = worksheet.cell(row=current_row, column=col_idx, value=col_name)
+            def write_table(ws, start_col, df, title, header_fill):
+                """Tek bir tabloyu belirtilen sütundan başlayarak yaz"""
+                current_row = 1
+                
+                # Başlık
+                ws.cell(row=current_row, column=start_col, value=title)
+                ws.cell(row=current_row, column=start_col).font = title_font
+                if cols_count > 1:
+                    ws.merge_cells(start_row=current_row, start_column=start_col, 
+                                  end_row=current_row, end_column=start_col + cols_count - 1)
+                
+                current_row += 1
+                
+                # Header satırı
+                header_names = ['KALINLIK', 'MALZEME', 'BOY', 'EN', 'PARÇA TİPİ', 'ADET']
+                for col_idx, col_name in enumerate(header_names):
+                    cell = ws.cell(row=current_row, column=start_col + col_idx, value=col_name)
                     cell.font = header_font
-                    cell.fill = header_fill_body
+                    cell.fill = header_fill
                     cell.alignment = Alignment(horizontal='center')
                     cell.border = thin_border
                 
                 current_row += 1
                 
-                # Data
-                for row_data in body_df.values:
-                    for col_idx, value in enumerate(row_data, 1):
-                        cell = worksheet.cell(row=current_row, column=col_idx, value=value)
-                        cell.border = thin_border
-                        cell.alignment = Alignment(horizontal='center')
+                # Veri satırları
+                if not df.empty:
+                    df_ordered = df.copy()
+                    existing_cols = [c for c in column_order if c in df_ordered.columns]
+                    df_ordered = df_ordered[existing_cols]
+                    
+                    for row_data in df_ordered.values:
+                        for col_idx, value in enumerate(row_data):
+                            cell = ws.cell(row=current_row, column=start_col + col_idx, value=value)
+                            cell.border = thin_border
+                            cell.alignment = Alignment(horizontal='center')
+                        current_row += 1
+                else:
+                    ws.cell(row=current_row, column=start_col, value='(Veri yok)')
                     current_row += 1
-            else:
-                worksheet.cell(row=current_row, column=1, value='(Veri yok)')
-                current_row += 1
-            
-            # ========== SAĞ TABLO: İNCE PARÇALAR ==========
-            # Sağ tarafın başlangıç sütunu (body sütun sayısı + 2 boşluk)
-            right_start_col = body_cols_count + 2
-            
-            current_row = 1  # Tekrar başa dön
-            
-            # Başlık
-            worksheet.cell(row=current_row, column=right_start_col, value='İNCE PARÇALAR (ARKALIK)')
-            worksheet.cell(row=current_row, column=right_start_col).font = title_font
-            thin_cols_count = len(thin_df.columns) if not thin_df.empty else 6
-            if thin_cols_count > 1:
-                worksheet.merge_cells(start_row=current_row, start_column=right_start_col, 
-                                     end_row=current_row, end_column=right_start_col + thin_cols_count - 1)
-            
-            current_row += 1
-            
-            # Header
-            if not thin_df.empty:
-                for col_idx, col_name in enumerate(thin_df.columns):
-                    cell = worksheet.cell(row=current_row, column=right_start_col + col_idx, value=col_name)
-                    cell.font = header_font
-                    cell.fill = header_fill_thin
-                    cell.alignment = Alignment(horizontal='center')
-                    cell.border = thin_border
                 
-                current_row += 1
-                
-                # Data
-                for row_data in thin_df.values:
-                    for col_idx, value in enumerate(row_data):
-                        cell = worksheet.cell(row=current_row, column=right_start_col + col_idx, value=value)
-                        cell.border = thin_border
-                        cell.alignment = Alignment(horizontal='center')
-                    current_row += 1
-            else:
-                worksheet.cell(row=current_row, column=right_start_col, value='(Veri yok)')
-                current_row += 1
+                return current_row
+            
+            # ========== 1. TABLO: 18mm PARÇALAR (Mavi) ==========
+            col_18mm_start = 1
+            write_table(worksheet, col_18mm_start, df_18mm, '18mm Parçalar', header_fill_18mm)
+            
+            # ========== 2. TABLO: 16mm PARÇALAR (Mor) ==========
+            col_16mm_start = col_18mm_start + cols_count + table_gap
+            write_table(worksheet, col_16mm_start, df_16mm, '16mm Parçalar', header_fill_16mm)
+            
+            # ========== 3. TABLO: 8mm PARÇALAR (Yeşil) ==========
+            col_8mm_start = col_16mm_start + cols_count + table_gap
+            write_table(worksheet, col_8mm_start, df_8mm, '8mm Parçalar', header_fill_8mm)
             
             # Sütun genişliklerini ayarla
-            for col_idx in range(1, body_cols_count + 1):
-                worksheet.column_dimensions[get_column_letter(col_idx)].width = 15
-            
-            for col_idx in range(right_start_col, right_start_col + thin_cols_count):
+            for col_idx in range(1, col_8mm_start + cols_count + 1):
                 worksheet.column_dimensions[get_column_letter(col_idx)].width = 15
             
             # Toplam parça sayısı hesapla
             total_parts = 0
-            if not body_df.empty and 'ADET' in body_df.columns:
-                total_parts += int(body_df['ADET'].sum())
-            if not thin_df.empty and 'ADET' in thin_df.columns:
-                total_parts += int(thin_df['ADET'].sum())
+            if not df_18mm.empty and 'ADET' in df_18mm.columns:
+                total_parts += int(df_18mm['ADET'].sum())
+            if not df_16mm.empty and 'ADET' in df_16mm.columns:
+                total_parts += int(df_16mm['ADET'].sum())
+            if not df_8mm.empty and 'ADET' in df_8mm.columns:
+                total_parts += int(df_8mm['ADET'].sum())
             
             # Excel dosyasını kaydet
             workbook.save(output_path)
@@ -2562,6 +2535,16 @@ class Api:
                 file_path = ''
                 file_name = 'Manuel Düzenleme'
             
+            # Tüm malzemeleri topla
+            all_materials = set()
+            all_types = set()
+            for df in [df_18mm, df_16mm, df_8mm]:
+                if not df.empty:
+                    if 'MALZEME' in df.columns:
+                        all_materials.update(df['MALZEME'].tolist())
+                    if 'PARÇA TİPİ' in df.columns:
+                        all_types.update(df['PARÇA TİPİ'].tolist())
+            
             job = {
                 'job_no': job_no or f"JOB-{len(self.db.get_history()) + 1:04d}",
                 'date': datetime.now().strftime("%Y-%m-%d %H:%M"),
@@ -2570,8 +2553,8 @@ class Api:
                 'output_path': output_path,
                 'stats': {
                     'parts': total_parts,
-                    'materials': len(set(body_df['MALZEME'].tolist() if not body_df.empty else [])),
-                    'types': len(set(body_df['PARÇA TİPİ'].tolist() if not body_df.empty else []))
+                    'materials': len(all_materials),
+                    'types': len(all_types)
                 },
                 'results': {
                     'body': body_data,
