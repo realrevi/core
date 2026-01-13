@@ -470,6 +470,20 @@
             filter: brightness(1.1);
         }
 
+        /* Purple Button (Toplu Dolap Ayarları) */
+        .btn-purple {
+            background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+            color: white;
+            box-shadow: 0 4px 6px rgba(139, 92, 246, 0.2);
+            border: none;
+        }
+
+        .btn-purple:hover:not(:disabled) {
+            box-shadow: 0 8px 15px rgba(139, 92, 246, 0.4);
+            transform: translateY(-2px);
+            filter: brightness(1.1);
+        }
+
         /* Secondary Button */
         .btn-secondary {
             background: transparent;
@@ -495,6 +509,31 @@
             background: var(--bg-tertiary);
             color: var(--logo-dark);
             border-color: var(--logo-dark);
+        }
+
+        /* Action Button (Unified style for action bar) */
+        .btn-action {
+            background: var(--bg-card);
+            color: var(--text-primary);
+            border: 2px solid var(--border-color);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .btn-action:hover:not(:disabled) {
+            background: var(--bg-card-hover);
+            border-color: var(--primary);
+            box-shadow: var(--shadow-md);
+            transform: translateY(-2px);
+        }
+
+        .btn-action:disabled {
+            background: var(--bg-tertiary);
+            color: var(--text-muted);
+            border-color: var(--border-color);
+        }
+
+        .btn-action:disabled i {
+            opacity: 0.4;
         }
 
         .btn-icon {
@@ -2426,17 +2465,22 @@
 
                         <!-- Action Buttons -->
                         <div class="action-buttons">
-                            <button class="btn btn-warning btn-lg" id="btn-module-depth" disabled
+                            <button class="btn btn-action btn-lg" id="btn-cabinet-settings" disabled
+                                onclick="openCabinetSettingsModal()">
+                                <i class="fas fa-layer-group" style="color: #8b5cf6;"></i>
+                                <span>Toplu Dolap Ayarları</span>
+                            </button>
+                            <button class="btn btn-action btn-lg" id="btn-module-depth" disabled
                                 onclick="openModuleDepthModal()">
-                                <i class="fas fa-cube"></i>
+                                <i class="fas fa-cube" style="color: #f59e0b;"></i>
                                 <span>Özel Modül</span>
                             </button>
-                            <button class="btn btn-warning btn-lg" id="btn-analyze" disabled>
-                                <i class="fas fa-play"></i>
+                            <button class="btn btn-action btn-lg" id="btn-analyze" disabled>
+                                <i class="fas fa-search-plus" style="color: #6366f1;"></i>
                                 <span data-i18n="analyze">Analiz Et</span>
                             </button>
-                            <button class="btn btn-success btn-lg" id="btn-quick-analyze" disabled>
-                                <i class="fas fa-bolt"></i>
+                            <button class="btn btn-action btn-lg" id="btn-quick-analyze" disabled>
+                                <i class="fas fa-bolt" style="color: #10b981;"></i>
                                 <span>Hızlı Analiz</span>
                             </button>
                         </div>
@@ -3001,6 +3045,110 @@
         </div>
     </div>
 
+    <!-- Cabinet Settings Modal (Toplu Dolap Ayarları) -->
+    <div class="modal-overlay" id="modal-cabinet-settings">
+        <div class="modal modal-md">
+            <div class="modal-header">
+                <h3 class="modal-title">
+                    <i class="fas fa-layer-group"></i>
+                    <span>Toplu Dolap Ayarları</span>
+                </h3>
+                <button class="modal-close" data-close-modal>
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p class="text-secondary mb-4">Tüm dolap tipleri için varsayılan ölçüleri ayarlayın. Modül adından
+                    tespit edilen dolap tipine göre otomatik uygulanır.</p>
+
+                <!-- Alt Dolap -->
+                <div class="module-item mb-3"
+                    style="display: flex; align-items: center; gap: 1rem; padding: 1rem; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--border-radius-sm);">
+                    <div style="display: flex; flex-direction: column; min-width: 80px;">
+                        <span style="font-size: 0.7rem; color: var(--primary); font-weight: 600;">ALT DOLAP</span>
+                        <span style="font-size: 0.75rem; color: var(--text-muted);">Tezgah altı</span>
+                    </div>
+                    <div style="flex: 1; display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                        <div class="input-group" style="gap: 0.25rem;">
+                            <label
+                                style="font-size: 0.7rem; text-transform: uppercase; color: var(--text-muted);">Yükseklik</label>
+                            <input type="number" class="input" id="cabinet-alt-yukseklik" value="720"
+                                style="padding: 0.5rem; font-size: 0.875rem;">
+                            <span style="font-size: 0.65rem; color: var(--text-muted);">720mm</span>
+                        </div>
+                        <div class="input-group" style="gap: 0.25rem;">
+                            <label
+                                style="font-size: 0.7rem; text-transform: uppercase; color: var(--text-muted);">Derinlik</label>
+                            <input type="number" class="input" id="cabinet-alt-derinlik" value="580"
+                                style="padding: 0.5rem; font-size: 0.875rem;">
+                            <span style="font-size: 0.65rem; color: var(--text-muted);">580mm</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Üst Dolap -->
+                <div class="module-item mb-3"
+                    style="display: flex; align-items: center; gap: 1rem; padding: 1rem; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--border-radius-sm);">
+                    <div style="display: flex; flex-direction: column; min-width: 80px;">
+                        <span style="font-size: 0.7rem; color: #8b5cf6; font-weight: 600;">ÜST DOLAP</span>
+                        <span style="font-size: 0.75rem; color: var(--text-muted);">Asma dolap</span>
+                    </div>
+                    <div style="flex: 1; display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                        <div class="input-group" style="gap: 0.25rem;">
+                            <label
+                                style="font-size: 0.7rem; text-transform: uppercase; color: var(--text-muted);">Yükseklik</label>
+                            <input type="number" class="input" id="cabinet-ust-yukseklik" value="720"
+                                style="padding: 0.5rem; font-size: 0.875rem;">
+                            <span style="font-size: 0.65rem; color: var(--text-muted);">720mm</span>
+                        </div>
+                        <div class="input-group" style="gap: 0.25rem;">
+                            <label
+                                style="font-size: 0.7rem; text-transform: uppercase; color: var(--text-muted);">Derinlik</label>
+                            <input type="number" class="input" id="cabinet-ust-derinlik" value="330"
+                                style="padding: 0.5rem; font-size: 0.875rem;">
+                            <span style="font-size: 0.65rem; color: var(--text-muted);">330mm</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Boy Dolap -->
+                <div class="module-item mb-3"
+                    style="display: flex; align-items: center; gap: 1rem; padding: 1rem; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--border-radius-sm);">
+                    <div style="display: flex; flex-direction: column; min-width: 80px;">
+                        <span style="font-size: 0.7rem; color: #10b981; font-weight: 600;">BOY DOLAP</span>
+                        <span style="font-size: 0.75rem; color: var(--text-muted);">Tam boy</span>
+                    </div>
+                    <div style="flex: 1; display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                        <div class="input-group" style="gap: 0.25rem;">
+                            <label
+                                style="font-size: 0.7rem; text-transform: uppercase; color: var(--text-muted);">Yükseklik</label>
+                            <input type="number" class="input" id="cabinet-boy-yukseklik" value="2100"
+                                style="padding: 0.5rem; font-size: 0.875rem;">
+                            <span style="font-size: 0.65rem; color: var(--text-muted);">2100mm</span>
+                        </div>
+                        <div class="input-group" style="gap: 0.25rem;">
+                            <label
+                                style="font-size: 0.7rem; text-transform: uppercase; color: var(--text-muted);">Derinlik</label>
+                            <input type="number" class="input" id="cabinet-boy-derinlik" value="580"
+                                style="padding: 0.5rem; font-size: 0.875rem;">
+                            <span style="font-size: 0.65rem; color: var(--text-muted);">580mm</span>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" data-close-modal>İptal</button>
+                <button class="btn btn-warning" onclick="resetCabinetSettings()">
+                    <i class="fas fa-undo"></i> Sıfırla
+                </button>
+                <button class="btn btn-warning" onclick="saveCabinetSettings()">
+                    <i class="fas fa-check"></i> Uygula
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- Job Detail Modal -->
     <div class="modal-overlay" id="modal-job-detail">
         <div class="modal modal-md">
@@ -3463,9 +3611,11 @@
                 container.innerHTML = '';
                 btnAnalyze.disabled = true;
                 btnQuickAnalyze.disabled = true;
-                // Module depth butonu
+                // Module depth ve cabinet settings butonları
                 const btnModuleDepth = document.getElementById('btn-module-depth');
                 if (btnModuleDepth) btnModuleDepth.disabled = true;
+                const btnCabinetSettings = document.getElementById('btn-cabinet-settings');
+                if (btnCabinetSettings) btnCabinetSettings.disabled = true;
             } else {
                 dropZone.classList.add('has-file');
                 dropZone.querySelector('.drop-zone-icon').textContent = '✅';
@@ -3492,9 +3642,11 @@
 
                 btnAnalyze.disabled = false;
                 btnQuickAnalyze.disabled = false;
-                // Module depth butonu
+                // Module depth ve cabinet settings butonları
                 const btnModuleDepth = document.getElementById('btn-module-depth');
                 if (btnModuleDepth) btnModuleDepth.disabled = false;
+                const btnCabinetSettings = document.getElementById('btn-cabinet-settings');
+                if (btnCabinetSettings) btnCabinetSettings.disabled = false;
             }
         }
 
@@ -5014,6 +5166,77 @@
                 showToast('error', 'Hata', error.message || 'Analiz sırasında hata oluştu!');
                 showProgress(false);
                 setStatus('Hata', 'error');
+            }
+        }
+
+        // ============================================
+        // SECTION 18F: CABINET SETTINGS (Toplu Dolap Ayarları)
+        // ============================================
+        async function openCabinetSettingsModal() {
+            try {
+                // Backend'den mevcut ayarları al
+                const settings = await api('get_cabinet_settings');
+
+                // Input'ları doldur
+                document.getElementById('cabinet-alt-yukseklik').value = settings.alt?.yukseklik || 720;
+                document.getElementById('cabinet-alt-derinlik').value = settings.alt?.derinlik || 580;
+                document.getElementById('cabinet-ust-yukseklik').value = settings.ust?.yukseklik || 720;
+                document.getElementById('cabinet-ust-derinlik').value = settings.ust?.derinlik || 330;
+                document.getElementById('cabinet-boy-yukseklik').value = settings.boy?.yukseklik || 2100;
+                document.getElementById('cabinet-boy-derinlik').value = settings.boy?.derinlik || 580;
+
+                openModal('modal-cabinet-settings');
+            } catch (error) {
+                console.error('Cabinet settings load error:', error);
+                // Varsayılan değerlerle aç
+                openModal('modal-cabinet-settings');
+            }
+        }
+
+        async function saveCabinetSettings() {
+            try {
+                // Alt dolap ayarları
+                await api('set_cabinet_settings', 'alt', {
+                    yukseklik: parseInt(document.getElementById('cabinet-alt-yukseklik').value) || 720,
+                    derinlik: parseInt(document.getElementById('cabinet-alt-derinlik').value) || 580
+                });
+
+                // Üst dolap ayarları
+                await api('set_cabinet_settings', 'ust', {
+                    yukseklik: parseInt(document.getElementById('cabinet-ust-yukseklik').value) || 720,
+                    derinlik: parseInt(document.getElementById('cabinet-ust-derinlik').value) || 330
+                });
+
+                // Boy dolap ayarları
+                await api('set_cabinet_settings', 'boy', {
+                    yukseklik: parseInt(document.getElementById('cabinet-boy-yukseklik').value) || 2100,
+                    derinlik: parseInt(document.getElementById('cabinet-boy-derinlik').value) || 580
+                });
+
+                showToast('success', 'Başarılı', 'Dolap ayarları kaydedildi!');
+                closeModal('modal-cabinet-settings');
+
+            } catch (error) {
+                showToast('error', 'Hata', 'Ayarlar kaydedilemedi: ' + error.message);
+            }
+        }
+
+        async function resetCabinetSettings() {
+            try {
+                await api('reset_cabinet_settings');
+
+                // Input'ları varsayılan değerlere doldur
+                document.getElementById('cabinet-alt-yukseklik').value = 720;
+                document.getElementById('cabinet-alt-derinlik').value = 580;
+                document.getElementById('cabinet-ust-yukseklik').value = 720;
+                document.getElementById('cabinet-ust-derinlik').value = 330;
+                document.getElementById('cabinet-boy-yukseklik').value = 2100;
+                document.getElementById('cabinet-boy-derinlik').value = 580;
+
+                showToast('info', 'Sıfırlandı', 'Dolap ayarları varsayılan değerlere döndürüldü.');
+
+            } catch (error) {
+                showToast('error', 'Hata', 'Ayarlar sıfırlanamadı: ' + error.message);
             }
         }
 

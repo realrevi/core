@@ -687,9 +687,15 @@ class ExcelAnalyzer:
     - KAYIT/KUŞAK: Bir kenar 100 veya 120mm civarı
     """
 
-    def __init__(self, data_manager: JsonDataManager, custom_modules: Dict = None):
+    def __init__(self, data_manager: JsonDataManager, custom_modules: Dict = None, cabinet_settings: Dict = None):
         self.data_manager = data_manager
         self.custom_modules = custom_modules or {}
+        # Toplu dolap tipi ayarları
+        self.cabinet_settings = cabinet_settings or {
+            'alt': {'yukseklik': 720, 'derinlik': 580},
+            'ust': {'yukseklik': 720, 'derinlik': 330},
+            'boy': {'yukseklik': 2100, 'derinlik': 580}
+        }
     
     def _get_custom_module_for_poz(self, poz: str) -> Dict:
         """POZ için özel modül ayarlarını döndür"""
@@ -1274,9 +1280,13 @@ class ExcelAnalyzer:
                 """Tek bir tabloyu belirtilen sütundan başlayarak yaz"""
                 current_row = 1
                 
-                # Başlık
+                # Zebra efekti için gri renk
+                gray_fill = PatternFill(start_color='F2F2F2', end_color='F2F2F2', fill_type='solid')
+                
+                # Başlık - ORTALI
                 ws.cell(row=current_row, column=start_col, value=title)
                 ws.cell(row=current_row, column=start_col).font = title_font
+                ws.cell(row=current_row, column=start_col).alignment = Alignment(horizontal='center')
                 if cols_count > 1:
                     ws.merge_cells(start_row=current_row, start_column=start_col, 
                                   end_row=current_row, end_column=start_col + cols_count - 1)
@@ -1294,19 +1304,24 @@ class ExcelAnalyzer:
                 
                 current_row += 1
                 
-                # Veri satırları
+                # Veri satırları - ZEBRA EFEKTİ (beyaz/gri)
                 if not df.empty:
                     # DataFrame sütunlarını sırala
                     df_ordered = df.copy()
                     existing_cols = [c for c in column_order if c in df_ordered.columns]
                     df_ordered = df_ordered[existing_cols]
                     
+                    row_index = 0
                     for row_data in df_ordered.values:
                         for col_idx, value in enumerate(row_data):
                             cell = ws.cell(row=current_row, column=start_col + col_idx, value=value)
                             cell.border = thin_border
                             cell.alignment = Alignment(horizontal='center')
+                            # Çift satırlar gri (0, 2, 4...), tek satırlar beyaz
+                            if row_index % 2 == 1:
+                                cell.fill = gray_fill
                         current_row += 1
+                        row_index += 1
                 else:
                     ws.cell(row=current_row, column=start_col, value='(Veri yok)')
                     current_row += 1
@@ -1326,8 +1341,28 @@ class ExcelAnalyzer:
             write_table(worksheet, col_8mm_start, df_8mm, '8mm Parçalar', header_fill_8mm)
             
             # Sütun genişliklerini ayarla
-            for col_idx in range(1, col_8mm_start + cols_count + 1):
-                worksheet.column_dimensions[get_column_letter(col_idx)].width = 15
+            # Sütun sırası: KALINLIK, MALZEME, BOY, EN, PARÇA TİPİ, ADET
+            # 18mm ve 16mm için genişlikler
+            widths_normal = [9, None, 9.5, 9.5, 14.2, 9]  # None = otomatik
+            # 8mm için genişlikler (PARÇA TİPİ farklı)
+            widths_8mm = [9, None, 9.5, 9.5, 15.7, 9]
+            
+            def set_column_widths(start_col, df, widths):
+                for i, width in enumerate(widths):
+                    col_letter = get_column_letter(start_col + i)
+                    if width is None:
+                        # Otomatik: içeriğe göre ayarla
+                        max_len = len('MALZEME')  # Header uzunluğu
+                        if not df.empty and 'MALZEME' in df.columns:
+                            max_content = df['MALZEME'].astype(str).str.len().max()
+                            max_len = max(max_len, max_content)
+                        worksheet.column_dimensions[col_letter].width = max_len + 2
+                    else:
+                        worksheet.column_dimensions[col_letter].width = width
+            
+            set_column_widths(col_18mm_start, df_18mm, widths_normal)
+            set_column_widths(col_16mm_start, df_16mm, widths_normal)
+            set_column_widths(col_8mm_start, df_8mm, widths_8mm)
             
             # İstatistikler
             govde_18 = int(df_18mm['ADET'].sum()) if not df_18mm.empty else 0
@@ -1495,16 +1530,45 @@ class ExcelAnalyzer:
                 poz = str(row.get(poz_col, '')).strip() if poz_col and poz_col in df.columns else ''
                 custom_module = self._get_custom_module_for_poz(poz) if poz else None
                 
+                # Modül adını al ve dolap tipini tespit et
+                modul_adi = row.get(modul_col, '') if modul_col and modul_col in df.columns else ''
+                modul_adi_str = str(modul_adi).lower() if modul_adi else ''
+                
+                # Dolap tipini belirle: üst, alt, boy
+                if 'üst' in modul_adi_str or 'ust' in modul_adi_str:
+                    dolap_tipi = 'ust'
+                elif 'boy' in modul_adi_str:
+                    dolap_tipi = 'boy'
+                else:
+                    dolap_tipi = 'alt'
+                
                 # Modül genişliğini al - önce özel ayarlardan, yoksa modül adından
                 if custom_module and custom_module.get('genislik'):
                     modul_gen = custom_module.get('genislik')
                 else:
-                    modul_adi = row.get(modul_col, '') if modul_col and modul_col in df.columns else ''
                     modul_gen = get_modul_genislik(modul_adi)
                 
-                # Özel yükseklik ve derinlik
-                custom_yukseklik = custom_module.get('yukseklik') if custom_module else None
-                custom_derinlik = custom_module.get('derinlik') if custom_module else None
+                # ============================================================
+                # ÖLÇÜLERİ BELİRLE - ÖNCELİK SIRASI:
+                # 1. POZ-spesifik özel modül ayarları (custom_module)
+                # 2. Toplu dolap tipi ayarları (cabinet_settings)
+                # 3. Varsayılan değerler
+                # ============================================================
+                
+                # Önce POZ-spesifik ayarları kontrol et
+                if custom_module:
+                    custom_yukseklik = custom_module.get('yukseklik')
+                    custom_derinlik = custom_module.get('derinlik')
+                else:
+                    custom_yukseklik = None
+                    custom_derinlik = None
+                
+                # Toplu dolap ayarlarından değerleri al
+                cabinet = self.cabinet_settings.get(dolap_tipi, {'yukseklik': 720, 'derinlik': 580})
+                
+                # Final yükseklik ve derinlik - POZ ayarı öncelikli, yoksa cabinet ayarı
+                yukseklik = custom_yukseklik if custom_yukseklik else cabinet.get('yukseklik', 720)
+                derinlik = custom_derinlik if custom_derinlik else cabinet.get('derinlik', 580)
                 
                 # Öğrenilmiş parça kontrolü (kanallı dahil key)
                 learned_key = f"{boy}x{en}_{malzeme}"
@@ -1523,128 +1587,59 @@ class ExcelAnalyzer:
                 if db_kalinlik <= ARKALIK_KALINLIK:
                     # Normal ARKALIK: (Yükseklik-18) x (Genişlik-18)
                     if modul_gen:
-                        expected_arkalik_boy = 720 - 18  # 702
+                        expected_arkalik_boy = yukseklik - 18
                         expected_arkalik_en = modul_gen - 18
                         if abs(boy - expected_arkalik_boy) <= TOLERANS and abs(en - expected_arkalik_en) <= TOLERANS:
                             return 'ARKALIK', db_kalinlik, boy, en, kanalli
                         
-                        # Boy dolap arkalık
-                        expected_arkalik_boy_boy = 2100 - 18  # 2082
-                        if abs(boy - expected_arkalik_boy_boy) <= TOLERANS and abs(en - expected_arkalik_en) <= TOLERANS:
-                            return 'ARKALIK', db_kalinlik, boy, en, kanalli
-                        
                         # ARKALIK (İÇERDE): (Yükseklik-37) x (Genişlik-37)
-                        expected_arkalik_icerde_boy = 720 - 37  # 683
+                        expected_arkalik_icerde_boy = yukseklik - 37
                         expected_arkalik_icerde_en = modul_gen - 37
                         if abs(boy - expected_arkalik_icerde_boy) <= TOLERANS and abs(en - expected_arkalik_icerde_en) <= TOLERANS:
-                            return 'ARKALIK (İÇERDE)', db_kalinlik, boy, en, kanalli
-                        
-                        # Boy dolap için arkalık içerde
-                        expected_arkalik_icerde_boy_boy = 2100 - 37  # 2063
-                        if abs(boy - expected_arkalik_icerde_boy_boy) <= TOLERANS and abs(en - expected_arkalik_icerde_en) <= TOLERANS:
                             return 'ARKALIK (İÇERDE)', db_kalinlik, boy, en, kanalli
                     
                     # Genel arkalık (modül genişliği bilinmiyorsa)
                     return 'ARKALIK', db_kalinlik, boy, en, kanalli
                 
                 # ============================================================
-                # ÖZEL MODÜL AYARLARI VARSA - ÖNCE BUNLARI KONTROL ET
-                # ============================================================
-                
-                if custom_module:
-                    # Özel yükseklik ve derinlik değerlerini kullan
-                    yukseklik = custom_yukseklik or 720
-                    derinlik = custom_derinlik or 580
-                    
-                    # YAN kontrolü - Özel Yükseklik x Özel Derinlik
-                    if abs(boy - yukseklik) <= TOLERANS and abs(en - derinlik) <= TOLERANS:
-                        return 'YAN', db_kalinlik, boy, en, kanalli
-                    
-                    # ALT-ÜST: (Özel_Genişlik-36) x (Özel_Derinlik-1)
-                    if modul_gen:
-                        expected_alt_ust_boy = modul_gen - 36
-                        expected_alt_ust_en = derinlik - 1
-                        
-                        if abs(boy - expected_alt_ust_boy) <= TOLERANS and abs(en - expected_alt_ust_en) <= TOLERANS:
-                            return 'ALT-ÜST', db_kalinlik, boy, en, kanalli
-                    
-                    # RAF: (Özel_Genişlik-37) x (Özel_Derinlik-50 veya 40)
-                    if modul_gen and not kanalli:
-                        expected_raf_boy = modul_gen - 37
-                        
-                        # Alt dolap rafı: derinlik - 50
-                        expected_raf_en_alt = derinlik - 50
-                        if abs(boy - expected_raf_boy) <= TOLERANS and abs(en - expected_raf_en_alt) <= TOLERANS:
-                            return 'RAF', db_kalinlik, boy, en, kanalli
-                        
-                        # Üst dolap rafı: derinlik - 40
-                        expected_raf_en_ust = derinlik - 40
-                        if abs(boy - expected_raf_boy) <= TOLERANS and abs(en - expected_raf_en_ust) <= TOLERANS:
-                            return 'RAF (ÜST)', db_kalinlik, boy, en, kanalli
-                
-                # ============================================================
-                # STANDART ÖLÇÜ KONTROLÜ
+                # PARÇA TİPİ TESPİTİ - yukseklik ve derinlik değerlerini kullan
+                # (cabinet_settings veya custom_module'den alındı)
                 # ============================================================
                 
                 # YAN kontrolü - Yükseklik x Derinlik
-                # Üst dolap: 720 x 330
-                if abs(boy - 720) <= TOLERANS and abs(en - 330) <= TOLERANS:
+                if abs(boy - yukseklik) <= TOLERANS and abs(en - derinlik) <= TOLERANS:
                     return 'YAN', db_kalinlik, boy, en, kanalli
                 
-                # Alt dolap: 720 x 580
-                if abs(boy - 720) <= TOLERANS and abs(en - 580) <= TOLERANS:
-                    return 'YAN', db_kalinlik, boy, en, kanalli
-                
-                # Boy dolap: 2100 x 580
-                if abs(boy - 2100) <= TOLERANS and abs(en - 580) <= TOLERANS:
-                    return 'YAN', db_kalinlik, boy, en, kanalli
-                
-                # ============================================================
-                # MODÜL GENİŞLİĞİNE GÖRE HESAPLAMA
-                # ============================================================
-                
+                # ALT-ÜST: (Genişlik-36) x (Derinlik-1)
                 if modul_gen:
-                    # Standart derinlik değerleri
-                    derinlik_alt = custom_derinlik or 580
-                    derinlik_ust = 330
-                    
-                    # ALT-ÜST: (Genişlik-36) x (Derinlik-1)
                     expected_alt_ust_boy = modul_gen - 36
+                    expected_alt_ust_en = derinlik - 1
                     
-                    # Alt dolap: derinlik 580 → 579
-                    if abs(boy - expected_alt_ust_boy) <= TOLERANS and abs(en - (derinlik_alt - 1)) <= TOLERANS:
+                    if abs(boy - expected_alt_ust_boy) <= TOLERANS and abs(en - expected_alt_ust_en) <= TOLERANS:
                         return 'ALT-ÜST', db_kalinlik, boy, en, kanalli
-                    
-                    # Üst dolap: derinlik 330 → 329
-                    if abs(boy - expected_alt_ust_boy) <= TOLERANS and abs(en - (derinlik_ust - 1)) <= TOLERANS:
-                        return 'ALT-ÜST', db_kalinlik, boy, en, kanalli
-                    
-                    # ============================================================
-                    # SABİT: (Genişlik-36) x (Derinlik-23)
-                    # Kanallı veya kanalsız olabilir
-                    # ============================================================
+                
+                # SABİT: (Genişlik-36) x (Derinlik-23)
+                if modul_gen:
                     expected_sabit_boy = modul_gen - 36
-                    expected_sabit_en_alt = derinlik_alt - 23  # 580-23=557
-                    expected_sabit_en_ust = derinlik_ust - 23  # 330-23=307
+                    expected_sabit_en = derinlik - 23
                     
-                    if abs(boy - expected_sabit_boy) <= TOLERANS and abs(en - expected_sabit_en_alt) <= TOLERANS:
+                    if abs(boy - expected_sabit_boy) <= TOLERANS and abs(en - expected_sabit_en) <= TOLERANS:
                         return 'SABİT', db_kalinlik, boy, en, kanalli
+                
+                # RAF: (Genişlik-37) x (Derinlik-50 veya 40)
+                # RAF ASLA KANALLI OLMAZ
+                if modul_gen and not kanalli:
+                    expected_raf_boy = modul_gen - 37
                     
-                    if abs(boy - expected_sabit_boy) <= TOLERANS and abs(en - expected_sabit_en_ust) <= TOLERANS:
-                        return 'SABİT', db_kalinlik, boy, en, kanalli
+                    # Dolap tipine göre raf düşümü: alt=50, üst=40
+                    raf_dusum = 50 if dolap_tipi == 'alt' or dolap_tipi == 'boy' else 40
+                    expected_raf_en = derinlik - raf_dusum
                     
-                    # RAF: (Genişlik-37) x (Derinlik-50 veya 40)
-                    # RAF ASLA KANALLI OLMAZ
-                    if not kanalli:
-                        expected_raf_boy = modul_gen - 37
-                        
-                        # Alt dolap rafı: derinlik 580-50=530
-                        if abs(boy - expected_raf_boy) <= TOLERANS and abs(en - (derinlik_alt - 50)) <= TOLERANS:
-                            return 'RAF', db_kalinlik, boy, en, kanalli
-                        
-                        # Üst dolap rafı: derinlik 330-40=290
-                        if abs(boy - expected_raf_boy) <= TOLERANS and abs(en - (derinlik_ust - 40)) <= TOLERANS:
+                    if abs(boy - expected_raf_boy) <= TOLERANS and abs(en - expected_raf_en) <= TOLERANS:
+                        if dolap_tipi == 'ust':
                             return 'RAF (ÜST)', db_kalinlik, boy, en, kanalli
+                        else:
+                            return 'RAF', db_kalinlik, boy, en, kanalli
                 
                 # ============================================================
                 # MODÜL GENİŞLİĞİ YOKSA - SABİT ÖLÇÜLERLE KONTROL
@@ -1797,7 +1792,15 @@ class Api:
         self.current_file_paths = []
         self.custom_depths = {}
         self.custom_modules = {}  # POZ -> {genislik, yukseklik, derinlik}
-        self.analyzer = ExcelAnalyzer(self.jsondata, self.custom_modules)
+        
+        # Toplu dolap tipi ayarları (Alt/Üst/Boy dolap için varsayılan ölçüler)
+        self.cabinet_settings = {
+            'alt': {'yukseklik': 720, 'derinlik': 580},
+            'ust': {'yukseklik': 720, 'derinlik': 330},
+            'boy': {'yukseklik': 2100, 'derinlik': 580}
+        }
+        
+        self.analyzer = ExcelAnalyzer(self.jsondata, self.custom_modules, self.cabinet_settings)
 
     # === User Management ===
     def login(self, username: str, password: str, remember_me: bool = False) -> Dict:
@@ -2348,6 +2351,40 @@ class Api:
     def get_custom_depths(self) -> Dict:
         """Özel derinlikleri getir"""
         return self.custom_depths
+    
+    # === Cabinet Settings (Toplu Dolap Ayarları) ===
+    def get_cabinet_settings(self) -> Dict:
+        """Toplu dolap tipi ayarlarını getir (alt/üst/boy)"""
+        return self.cabinet_settings
+    
+    def set_cabinet_settings(self, cabinet_type: str, values: Dict) -> Dict:
+        """
+        Toplu dolap ayarlarını güncelle.
+        cabinet_type: 'alt', 'ust', veya 'boy'
+        values: {'yukseklik': int, 'derinlik': int}
+        """
+        if cabinet_type not in ['alt', 'ust', 'boy']:
+            return {'success': False, 'error': f'Geçersiz dolap tipi: {cabinet_type}'}
+        
+        if 'yukseklik' in values:
+            self.cabinet_settings[cabinet_type]['yukseklik'] = int(values['yukseklik'])
+        if 'derinlik' in values:
+            self.cabinet_settings[cabinet_type]['derinlik'] = int(values['derinlik'])
+        
+        # Analyzer'daki ayarları da güncelle
+        self.analyzer.cabinet_settings = self.cabinet_settings
+        
+        return {'success': True, 'cabinet_settings': self.cabinet_settings}
+    
+    def reset_cabinet_settings(self) -> Dict:
+        """Dolap ayarlarını varsayılana sıfırla"""
+        self.cabinet_settings = {
+            'alt': {'yukseklik': 720, 'derinlik': 580},
+            'ust': {'yukseklik': 720, 'derinlik': 330},
+            'boy': {'yukseklik': 2100, 'derinlik': 580}
+        }
+        self.analyzer.cabinet_settings = self.cabinet_settings
+        return {'success': True, 'cabinet_settings': self.cabinet_settings}
 
     # === Export Edited Results ===
     def export_edited_results(self, body_data: List[Dict], thin_data: List[Dict], job_no: str = None) -> Dict:
@@ -2461,9 +2498,13 @@ class Api:
                 """Tek bir tabloyu belirtilen sütundan başlayarak yaz"""
                 current_row = 1
                 
-                # Başlık
+                # Zebra efekti için gri renk
+                gray_fill = PatternFill(start_color='F2F2F2', end_color='F2F2F2', fill_type='solid')
+                
+                # Başlık - ORTALI
                 ws.cell(row=current_row, column=start_col, value=title)
                 ws.cell(row=current_row, column=start_col).font = title_font
+                ws.cell(row=current_row, column=start_col).alignment = Alignment(horizontal='center')
                 if cols_count > 1:
                     ws.merge_cells(start_row=current_row, start_column=start_col, 
                                   end_row=current_row, end_column=start_col + cols_count - 1)
@@ -2481,18 +2522,23 @@ class Api:
                 
                 current_row += 1
                 
-                # Veri satırları
+                # Veri satırları - ZEBRA EFEKTİ (beyaz/gri)
                 if not df.empty:
                     df_ordered = df.copy()
                     existing_cols = [c for c in column_order if c in df_ordered.columns]
                     df_ordered = df_ordered[existing_cols]
                     
+                    row_index = 0
                     for row_data in df_ordered.values:
                         for col_idx, value in enumerate(row_data):
                             cell = ws.cell(row=current_row, column=start_col + col_idx, value=value)
                             cell.border = thin_border
                             cell.alignment = Alignment(horizontal='center')
+                            # Çift satırlar gri (0, 2, 4...), tek satırlar beyaz
+                            if row_index % 2 == 1:
+                                cell.fill = gray_fill
                         current_row += 1
+                        row_index += 1
                 else:
                     ws.cell(row=current_row, column=start_col, value='(Veri yok)')
                     current_row += 1
@@ -2512,8 +2558,28 @@ class Api:
             write_table(worksheet, col_8mm_start, df_8mm, '8mm Parçalar', header_fill_8mm)
             
             # Sütun genişliklerini ayarla
-            for col_idx in range(1, col_8mm_start + cols_count + 1):
-                worksheet.column_dimensions[get_column_letter(col_idx)].width = 15
+            # Sütun sırası: KALINLIK, MALZEME, BOY, EN, PARÇA TİPİ, ADET
+            # 18mm ve 16mm için genişlikler
+            widths_normal = [9, None, 9.5, 9.5, 14.2, 9]  # None = otomatik
+            # 8mm için genişlikler (PARÇA TİPİ farklı)
+            widths_8mm = [9, None, 9.5, 9.5, 15.7, 9]
+            
+            def set_column_widths(start_col, df, widths):
+                for i, width in enumerate(widths):
+                    col_letter = get_column_letter(start_col + i)
+                    if width is None:
+                        # Otomatik: içeriğe göre ayarla
+                        max_len = len('MALZEME')  # Header uzunluğu
+                        if not df.empty and 'MALZEME' in df.columns:
+                            max_content = df['MALZEME'].astype(str).str.len().max()
+                            max_len = max(max_len, max_content)
+                        worksheet.column_dimensions[col_letter].width = max_len + 2
+                    else:
+                        worksheet.column_dimensions[col_letter].width = width
+            
+            set_column_widths(col_18mm_start, df_18mm, widths_normal)
+            set_column_widths(col_16mm_start, df_16mm, widths_normal)
+            set_column_widths(col_8mm_start, df_8mm, widths_8mm)
             
             # Toplam parça sayısı hesapla
             total_parts = 0
