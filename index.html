@@ -1007,6 +1007,67 @@
             color: var(--danger);
         }
 
+        /* Compact Stats for Results Modal */
+        .stats-grid-compact {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.5rem;
+            margin-bottom: 0.75rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        .stats-grid-compact .stat-card {
+            padding: 0.5rem 0.75rem;
+            gap: 0.5rem;
+            align-items: center;
+        }
+
+        .stats-grid-compact .stat-icon {
+            width: 24px;
+            height: 24px;
+            font-size: 0.75rem;
+            flex-shrink: 0;
+        }
+
+        .stats-grid-compact .stat-content {
+            display: flex;
+            align-items: baseline;
+            gap: 0.35rem;
+            flex-wrap: nowrap;
+        }
+
+        .stats-grid-compact .stat-value {
+            font-size: 1.1rem;
+            line-height: 1;
+        }
+
+        .stats-grid-compact .stat-label {
+            font-size: 0.7rem;
+            margin-top: 0;
+            white-space: nowrap;
+        }
+
+        /* Results Modal Scroll Area */
+        .results-fixed-header {
+            flex-shrink: 0;
+            padding-bottom: 0.5rem;
+        }
+
+        .results-scroll-area {
+            flex: 1;
+            overflow-y: auto;
+            min-height: 0;
+        }
+
+        #modal-results .modal-body {
+            display: flex;
+            flex-direction: column;
+            max-height: calc(80vh - 140px);
+            padding-bottom: 0;
+            overflow: hidden;
+        }
+
         /* ============================================
            SECTION 12: FILE DROP ZONE
            ============================================ */
@@ -2999,94 +3060,141 @@
                 </button>
             </div>
             <div class="modal-body">
-                <!-- Info Banner -->
-                <div class="alert alert-info mb-4">
-                    <i class="fas fa-info-circle"></i>
-                    <span>Parça tiplerini değiştirmek için tıklayın. Değişiklikler öğrenilecek ve gelecekte otomatik
-                        uygulanacak.</span>
-                </div>
+                <!-- Fixed Header Section -->
+                <div class="results-fixed-header">
+                    <!-- Info Banner -->
+                    <div class="alert alert-info"
+                        style="padding: 0.5rem 1rem; font-size: 0.85rem; margin-bottom: 1rem;">
+                        <i class="fas fa-info-circle"></i>
+                        <span>Parça tiplerini değiştirmek için tıklayın. Değişiklikler öğrenilecek ve gelecekte otomatik
+                            uygulanacak.</span>
+                    </div>
 
-                <!-- Stats -->
-                <div class="stats-grid mb-4">
-                    <div class="stat-card glass-card">
-                        <div class="stat-icon primary">
-                            <i class="fas fa-puzzle-piece"></i>
+                    <!-- Compact Stats -->
+                    <div class="stats-grid-compact mb-3">
+                        <div class="stat-card glass-card">
+                            <div class="stat-icon primary">
+                                <i class="fas fa-puzzle-piece"></i>
+                            </div>
+                            <div class="stat-content">
+                                <div class="stat-value" id="result-parts">0</div>
+                                <div class="stat-label" data-i18n="total_part">Toplam Parça</div>
+                            </div>
                         </div>
-                        <div class="stat-content">
-                            <div class="stat-value" id="result-parts">0</div>
-                            <div class="stat-label" data-i18n="total_part">Toplam Parça</div>
+                        <div class="stat-card glass-card">
+                            <div class="stat-icon success">
+                                <i class="fas fa-cubes"></i>
+                            </div>
+                            <div class="stat-content">
+                                <div class="stat-value" id="result-materials">0</div>
+                                <div class="stat-label" data-i18n="material_type">Malzeme Çeşidi</div>
+                            </div>
+                        </div>
+                        <div class="stat-card glass-card">
+                            <div class="stat-icon warning">
+                                <i class="fas fa-tags"></i>
+                            </div>
+                            <div class="stat-content">
+                                <div class="stat-value" id="result-types">0</div>
+                                <div class="stat-label" data-i18n="part_type">Parça Tipi</div>
+                            </div>
                         </div>
                     </div>
-                    <div class="stat-card glass-card">
-                        <div class="stat-icon success">
-                            <i class="fas fa-cubes"></i>
-                        </div>
-                        <div class="stat-content">
-                            <div class="stat-value" id="result-materials">0</div>
-                            <div class="stat-label" data-i18n="material_type">Malzeme Çeşidi</div>
-                        </div>
-                    </div>
-                    <div class="stat-card glass-card">
-                        <div class="stat-icon warning">
-                            <i class="fas fa-tags"></i>
-                        </div>
-                        <div class="stat-content">
-                            <div class="stat-value" id="result-types">0</div>
-                            <div class="stat-label" data-i18n="part_type">Parça Tipi</div>
-                        </div>
-                    </div>
-                </div>
 
-                <!-- Tabs -->
-                <div class="tabs">
-                    <button class="tab-btn active" data-tab="results-body">
-                        <span data-i18n="body_parts">Gövde</span> (<span id="body-count">0</span>)
-                    </button>
-                    <button class="tab-btn" data-tab="results-thin">
-                        <span data-i18n="thin_parts">İnce</span> (<span id="thin-count">0</span>)
-                    </button>
-                </div>
-
-                <!-- Body Table -->
-                <div class="tab-content active" id="results-body">
-                    <div class="table-container">
-                        <div class="table-wrapper" style="max-height: 400px; overflow-y: auto;">
-                            <table>
-                                <thead>
-                                    <tr>
-                                        <th>Kalınlık</th>
-                                        <th>Malzeme</th>
-                                        <th>Boy</th>
-                                        <th>En</th>
-                                        <th>Parça Tipi</th>
-                                        <th>Adet</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="body-table">
-                                </tbody>
-                            </table>
-                        </div>
+                    <!-- Tabs - 18mm / 16mm / 8mm -->
+                    <div class="tabs">
+                        <button class="tab-btn active" data-tab="results-18mm">
+                            <span class="badge badge-18" style="margin-right: 0.25rem;">18mm</span> (<span
+                                id="count-18mm">0</span>)
+                        </button>
+                        <button class="tab-btn" data-tab="results-16mm">
+                            <span class="badge badge-16" style="margin-right: 0.25rem;">16mm</span> (<span
+                                id="count-16mm">0</span>)
+                        </button>
+                        <button class="tab-btn" data-tab="results-8mm">
+                            <span class="badge badge-8" style="margin-right: 0.25rem;">8mm</span> (<span
+                                id="count-8mm">0</span>)
+                        </button>
                     </div>
                 </div>
 
-                <!-- Thin Table -->
-                <div class="tab-content" id="results-thin">
-                    <div class="table-container">
-                        <div class="table-wrapper" style="max-height: 400px; overflow-y: auto;">
-                            <table>
-                                <thead>
-                                    <tr>
-                                        <th>Kalınlık</th>
-                                        <th>Malzeme</th>
-                                        <th>Boy</th>
-                                        <th>En</th>
-                                        <th>Parça Tipi</th>
-                                        <th>Adet</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="thin-table">
-                                </tbody>
-                            </table>
+                <!-- Scrollable Content Area -->
+                <div class="results-scroll-area">
+                    <!-- 18mm Table -->
+                    <div class="tab-content active" id="results-18mm">
+                        <div class="table-container">
+                            <div class="table-wrapper">
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>Kalınlık</th>
+                                            <th>Malzeme</th>
+                                            <th>Boy</th>
+                                            <th>En</th>
+                                            <th>Parça Tipi</th>
+                                            <th>Adet</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="table-18mm">
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div class="table-empty hidden" id="empty-18mm">
+                                <i class="fas fa-inbox fa-2x mb-2" style="color: var(--text-muted)"></i>
+                                <p>Bu işte 18mm parça bulunamadı</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 16mm Table -->
+                    <div class="tab-content" id="results-16mm">
+                        <div class="table-container">
+                            <div class="table-wrapper">
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>Kalınlık</th>
+                                            <th>Malzeme</th>
+                                            <th>Boy</th>
+                                            <th>En</th>
+                                            <th>Parça Tipi</th>
+                                            <th>Adet</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="table-16mm">
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div class="table-empty hidden" id="empty-16mm">
+                                <i class="fas fa-inbox fa-2x mb-2" style="color: var(--text-muted)"></i>
+                                <p>Bu işte 16mm parça bulunamadı</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 8mm Table -->
+                    <div class="tab-content" id="results-8mm">
+                        <div class="table-container">
+                            <div class="table-wrapper">
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>Kalınlık</th>
+                                            <th>Malzeme</th>
+                                            <th>Boy</th>
+                                            <th>En</th>
+                                            <th>Parça Tipi</th>
+                                            <th>Adet</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="table-8mm">
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div class="table-empty hidden" id="empty-8mm">
+                                <i class="fas fa-inbox fa-2x mb-2" style="color: var(--text-muted)"></i>
+                                <p>Bu işte 8mm parça bulunamadı</p>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -4589,9 +4697,24 @@
 
         function showResultsModal(result) {
             // Sonuçları state'e kaydet (düzenleme için)
+            // Body ve thin'i birleştir
+            const allParts = [
+                ...(result.body || []).map(p => ({ ...p, _source: 'body' })),
+                ...(result.thin || []).map(p => ({ ...p, _source: 'thin' }))
+            ];
+
+            // Kalınlığa göre grupla
+            const parts18mm = allParts.filter(p => (p.KALINLIK || p['KALINLIK'] || 18) === 18);
+            const parts16mm = allParts.filter(p => (p.KALINLIK || p['KALINLIK']) === 16);
+            const parts8mm = allParts.filter(p => (p.KALINLIK || p['KALINLIK'] || 18) <= 8);
+
             state.currentResults = {
                 body: JSON.parse(JSON.stringify(result.body || [])),
                 thin: JSON.parse(JSON.stringify(result.thin || [])),
+                parts18mm: parts18mm,
+                parts16mm: parts16mm,
+                parts8mm: parts8mm,
+                allParts: allParts,
                 job_no: result.job_no,
                 total_parts: result.total_parts,
                 material_count: result.material_count,
@@ -4599,28 +4722,38 @@
             };
             state.editedParts = new Map(); // Düzenlenen parçaları takip et
 
+            // Özet istatistikleri güncelle
             document.getElementById('result-parts').textContent = result.total_parts || 0;
             document.getElementById('result-materials').textContent = result.material_count || 0;
             document.getElementById('result-types').textContent = result.type_count || 0;
 
-            document.getElementById('body-count').textContent = result.body?.length || 0;
-            document.getElementById('thin-count').textContent = result.thin?.length || 0;
+            // Tab sayaçlarını güncelle
+            document.getElementById('count-18mm').textContent = parts18mm.length;
+            document.getElementById('count-16mm').textContent = parts16mm.length;
+            document.getElementById('count-8mm').textContent = parts8mm.length;
 
-            // Tabloları doldur (düzenlenebilir)
-            populateEditableTable('body-table', state.currentResults.body, 'body');
-            populateEditableTable('thin-table', state.currentResults.thin, 'thin');
+            // Tabloları doldur
+            populateThicknessTable('table-18mm', 'empty-18mm', parts18mm, '18mm');
+            populateThicknessTable('table-16mm', 'empty-16mm', parts16mm, '16mm');
+            populateThicknessTable('table-8mm', 'empty-8mm', parts8mm, '8mm');
 
             openModal('modal-results');
         }
 
-        function populateEditableTable(tableId, data, tableType) {
+        // Kalınlık tabanlı tablo doldurma
+        function populateThicknessTable(tableId, emptyId, data, thicknessType) {
             const tbody = document.getElementById(tableId);
+            const emptyDiv = document.getElementById(emptyId);
             tbody.innerHTML = '';
 
             if (!data || data.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted">Veri yok</td></tr>';
+                tbody.closest('.table-wrapper').classList.add('hidden');
+                emptyDiv.classList.remove('hidden');
                 return;
             }
+
+            tbody.closest('.table-wrapper').classList.remove('hidden');
+            emptyDiv.classList.add('hidden');
 
             data.forEach((row, index) => {
                 const thickness = row.KALINLIK || row['KALINLIK'] || 18;
@@ -4634,12 +4767,14 @@
                 const en = row.EN || row['EN'] || 0;
                 const adet = row.ADET || row['ADET'] || 0;
                 const kanalli = row.KANALLI || row['KANALLI'] || false;
+                const sourceTable = row._source || 'body';
 
                 // Kanallı toggle butonu
                 const kanalliToggle = `<span class="kanalli-toggle ${kanalli ? 'active' : ''}" 
                     data-index="${index}" 
-                    data-table="${tableType}"
-                    onclick="toggleKanalli(this)"
+                    data-table="${thicknessType}"
+                    data-source="${sourceTable}"
+                    onclick="toggleKanalliNew(this)"
                     title="${kanalli ? 'Kanallı - tıkla değiştir' : 'Kanalsız - tıkla değiştir'}">K</span>`;
 
                 // Dropdown oluştur
@@ -4649,7 +4784,8 @@
 
                 const tr = document.createElement('tr');
                 tr.dataset.index = index;
-                tr.dataset.tableType = tableType;
+                tr.dataset.tableType = thicknessType;
+                tr.dataset.source = sourceTable;
                 tr.innerHTML = `
                     <td><span class="badge ${badgeClass}">${thickness}mm</span></td>
                     <td class="mono">${malzeme}</td>
@@ -4659,12 +4795,13 @@
                         <div class="part-type-cell">
                             <select class="part-type-select" 
                                     data-index="${index}" 
-                                    data-table="${tableType}"
+                                    data-table="${thicknessType}"
+                                    data-source="${sourceTable}"
                                     data-original="${partType}"
                                     data-boy="${boy}"
                                     data-en="${en}"
                                     data-malzeme="${malzeme}"
-                                    onchange="onPartTypeChange(this)">
+                                    onchange="onPartTypeChangeNew(this)">
                                 ${selectOptions}
                             </select>
                             ${kanalliToggle}
@@ -4674,6 +4811,12 @@
                 `;
                 tbody.appendChild(tr);
             });
+        }
+
+        // Eski fonksiyonlar uyumluluk için (kullanılmıyor artık ama bırakalım)
+        function populateEditableTable(tableId, data, tableType) {
+            // Eskiden kullanılan, artık populateThicknessTable kullanılıyor
+            console.log('Deprecated populateEditableTable called');
         }
 
         // Kanallı toggle fonksiyonu
@@ -4726,6 +4869,99 @@
                 state.currentResults.body[index]['PARÇA TİPİ'] = newValue;
             } else {
                 state.currentResults.thin[index]['PARÇA TİPİ'] = newValue;
+            }
+
+            // Öğrenme için kaydet (ölçü + malzeme bazlı)
+            if (newValue !== original) {
+                const key = `${boy}x${en}_${malzeme}`;
+                state.editedParts.set(key, {
+                    boy: parseInt(boy),
+                    en: parseInt(en),
+                    malzeme: malzeme,
+                    partType: newValue
+                });
+            }
+        }
+
+        // Yeni kalınlık tabanlı Kanallı toggle fonksiyonu
+        function toggleKanalliNew(element) {
+            const index = parseInt(element.dataset.index);
+            const thicknessType = element.dataset.table;
+            const sourceTable = element.dataset.source;
+            const isActive = element.classList.contains('active');
+
+            // Toggle
+            if (isActive) {
+                element.classList.remove('active');
+                element.title = 'Kanalsız - tıkla değiştir';
+            } else {
+                element.classList.add('active');
+                element.title = 'Kanallı - tıkla değiştir';
+            }
+
+            // State'i güncelle - orijinal body/thin'de de güncelle
+            const newValue = !isActive;
+            const partsArray = state.currentResults[`parts${thicknessType}`];
+            if (partsArray && partsArray[index]) {
+                partsArray[index]['KANALLI'] = newValue;
+                // Orijinal kaynağı da güncelle
+                if (sourceTable === 'body') {
+                    const origIndex = state.currentResults.body.findIndex(p =>
+                        p.BOY === partsArray[index].BOY &&
+                        p.EN === partsArray[index].EN &&
+                        p.MALZEME === partsArray[index].MALZEME
+                    );
+                    if (origIndex >= 0) state.currentResults.body[origIndex]['KANALLI'] = newValue;
+                } else {
+                    const origIndex = state.currentResults.thin.findIndex(p =>
+                        p.BOY === partsArray[index].BOY &&
+                        p.EN === partsArray[index].EN &&
+                        p.MALZEME === partsArray[index].MALZEME
+                    );
+                    if (origIndex >= 0) state.currentResults.thin[origIndex]['KANALLI'] = newValue;
+                }
+            }
+
+            // Satırı edited olarak işaretle
+            element.closest('tr').classList.add('edited');
+        }
+
+        // Yeni kalınlık tabanlı parça tipi değiştirme fonksiyonu
+        function onPartTypeChangeNew(select) {
+            const index = parseInt(select.dataset.index);
+            const thicknessType = select.dataset.table;
+            const sourceTable = select.dataset.source;
+            const original = select.dataset.original;
+            const newValue = select.value;
+            const boy = select.dataset.boy;
+            const en = select.dataset.en;
+            const malzeme = select.dataset.malzeme;
+
+            // Görsel geri bildirim
+            if (newValue !== original) {
+                select.classList.add('changed');
+                select.closest('tr').classList.add('edited');
+            } else {
+                select.classList.remove('changed');
+                select.closest('tr').classList.remove('edited');
+            }
+
+            // State'i güncelle
+            const partsArray = state.currentResults[`parts${thicknessType}`];
+            if (partsArray && partsArray[index]) {
+                partsArray[index]['PARÇA TİPİ'] = newValue;
+                // Orijinal kaynağı da güncelle
+                if (sourceTable === 'body') {
+                    const origIndex = state.currentResults.body.findIndex(p =>
+                        p.BOY == boy && p.EN == en && p.MALZEME === malzeme
+                    );
+                    if (origIndex >= 0) state.currentResults.body[origIndex]['PARÇA TİPİ'] = newValue;
+                } else {
+                    const origIndex = state.currentResults.thin.findIndex(p =>
+                        p.BOY == boy && p.EN == en && p.MALZEME === malzeme
+                    );
+                    if (origIndex >= 0) state.currentResults.thin[origIndex]['PARÇA TİPİ'] = newValue;
+                }
             }
 
             // Öğrenme için kaydet (ölçü + malzeme bazlı)
