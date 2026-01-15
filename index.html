@@ -3630,6 +3630,30 @@
             return translations[state.lang]?.[key] || key;
         }
 
+        function setLanguage(lang) {
+            state.lang = lang;
+            localStorage.setItem('core-lang', lang);
+
+            // Buton metnini güncelle
+            const langToggle = document.getElementById('lang-toggle');
+            if (langToggle) {
+                langToggle.querySelector('span').textContent = lang.toUpperCase();
+            }
+
+            // Tüm çevirileri güncelle
+            updateLanguage();
+
+            // Dosya listesi varsa onu da güncelle
+            if (state.files.length > 0) {
+                updateFileList();
+            }
+        }
+
+        function toggleLanguage() {
+            const newLang = state.lang === 'tr' ? 'en' : 'tr';
+            setLanguage(newLang);
+        }
+
         function updateLanguage() {
             document.querySelectorAll('[data-i18n]').forEach(el => {
                 const key = el.getAttribute('data-i18n');
@@ -5579,15 +5603,7 @@
             safeAddEvent('theme-toggle', 'click', toggleTheme);
 
             // Language toggle
-            const langToggle = document.getElementById('lang-toggle');
-            if (langToggle) {
-                langToggle.addEventListener('click', () => {
-                    state.lang = state.lang === 'tr' ? 'en' : 'tr';
-                    const span = langToggle.querySelector('span');
-                    if (span) span.textContent = state.lang.toUpperCase();
-                    updateLanguage();
-                });
-            }
+            safeAddEvent('lang-toggle', 'click', toggleLanguage);
 
             // Navigation
             document.querySelectorAll('.nav-btn').forEach(btn => {
@@ -5741,10 +5757,13 @@
             const savedTheme = localStorage.getItem('core-theme') || 'light';
             setTheme(savedTheme);
 
+            // Load saved language
+            const savedLang = localStorage.getItem('core-lang') || 'tr';
+            setLanguage(savedLang);
+
             // Setup components
             setupDropZone();
             setupEventListeners();
-            updateLanguage();
 
             // Focus username field
             setTimeout(() => {
