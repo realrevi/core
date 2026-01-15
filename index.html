@@ -1031,14 +1031,67 @@
         }
 
         .drop-zone.has-file {
-            border-color: var(--success);
+            border-color: var(--primary);
             border-style: solid;
-            background: rgba(16, 185, 129, 0.05);
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.08) 0%, rgba(139, 92, 246, 0.08) 100%);
         }
 
         .drop-zone-icon {
             font-size: 4rem;
             margin-bottom: 1rem;
+            transition: all var(--transition-normal);
+        }
+
+        /* Modern Ready Icon - Animated */
+        .drop-zone-ready-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            box-shadow: 0 8px 32px rgba(99, 102, 241, 0.35);
+            position: relative;
+            animation: pulse-glow 2s ease-in-out infinite;
+        }
+
+        .drop-zone-ready-icon i {
+            font-size: 2rem;
+            color: white;
+        }
+
+        .drop-zone-ready-icon::before {
+            content: '';
+            position: absolute;
+            inset: -4px;
+            border-radius: 50%;
+            border: 2px dashed rgba(99, 102, 241, 0.5);
+            animation: spin-slow 8s linear infinite;
+        }
+
+        @keyframes pulse-glow {
+
+            0%,
+            100% {
+                box-shadow: 0 8px 32px rgba(99, 102, 241, 0.35);
+                transform: scale(1);
+            }
+
+            50% {
+                box-shadow: 0 12px 48px rgba(139, 92, 246, 0.5);
+                transform: scale(1.02);
+            }
+        }
+
+        @keyframes spin-slow {
+            from {
+                transform: rotate(0deg);
+            }
+
+            to {
+                transform: rotate(360deg);
+            }
         }
 
         .drop-zone-text {
@@ -1048,9 +1101,52 @@
             margin-bottom: 0.5rem;
         }
 
+        .drop-zone.has-file .drop-zone-text {
+            font-size: 1.25rem;
+            font-weight: 600;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
         .drop-zone-hint {
             color: var(--text-muted);
             font-size: 0.875rem;
+        }
+
+        /* Ready state subtitle */
+        .drop-zone-ready-hint {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+            padding: 0.5rem 1rem;
+            background: var(--bg-tertiary);
+            border-radius: 999px;
+            margin-top: 1rem;
+            width: fit-content;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .drop-zone-ready-hint i {
+            color: var(--primary);
+            animation: bounce-gentle 1.5s ease-in-out infinite;
+        }
+
+        @keyframes bounce-gentle {
+
+            0%,
+            100% {
+                transform: translateY(0);
+            }
+
+            50% {
+                transform: translateY(-3px);
+            }
         }
 
         .drop-zone-file {
@@ -1442,13 +1538,19 @@
             align-items: center;
             gap: 0.75rem;
             padding: 1rem 1.5rem;
-            background: var(--bg-card);
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
             border-radius: var(--border-radius-sm);
-            box-shadow: var(--shadow-lg);
+            box-shadow: var(--shadow-xl), 0 0 40px rgba(0, 0, 0, 0.1);
             border-left: 4px solid var(--text-muted);
             min-width: 300px;
             max-width: 450px;
             animation: slideIn 0.3s ease;
+        }
+
+        [data-theme="dark"] .toast {
+            background: rgba(30, 41, 59, 0.95);
         }
 
         @keyframes slideIn {
@@ -2468,12 +2570,12 @@
                             <button class="btn btn-action btn-lg" id="btn-cabinet-settings" disabled
                                 onclick="openCabinetSettingsModal()">
                                 <i class="fas fa-layer-group" style="color: #8b5cf6;"></i>
-                                <span>Toplu Dolap Ayarları</span>
+                                <span data-i18n="cabinet_settings">Toplu Dolap Ayarları</span>
                             </button>
                             <button class="btn btn-action btn-lg" id="btn-module-depth" disabled
                                 onclick="openModuleDepthModal()">
                                 <i class="fas fa-cube" style="color: #f59e0b;"></i>
-                                <span>Özel Modül</span>
+                                <span data-i18n="custom_module">Özel Modül</span>
                             </button>
                             <button class="btn btn-action btn-lg" id="btn-analyze" disabled>
                                 <i class="fas fa-search-plus" style="color: #6366f1;"></i>
@@ -2481,7 +2583,7 @@
                             </button>
                             <button class="btn btn-action btn-lg" id="btn-quick-analyze" disabled>
                                 <i class="fas fa-bolt" style="color: #10b981;"></i>
-                                <span>Hızlı Analiz</span>
+                                <span data-i18n="quick_analyze">Hızlı Analiz</span>
                             </button>
                         </div>
                     </div>
@@ -2587,7 +2689,7 @@
             <footer class="footer">
                 <div class="footer-left">
                     <div class="status-indicator" id="status-indicator"></div>
-                    <span class="status-text" id="status-text">Hazır</span>
+                    <span class="status-text" id="status-text" data-i18n="ready">Hazır</span>
                 </div>
                 <div class="footer-right">
                     CORE v3.5 | © 2025
@@ -2606,15 +2708,15 @@
             <div class="modal-header">
                 <h3 class="modal-title">
                     <i class="fas fa-cube"></i>
-                    <span>Özel Modül Ayarları</span>
+                    <span data-i18n="module_settings">Özel Modül Ayarları</span>
                 </h3>
                 <button class="modal-close" data-close-modal>
                     <i class="fas fa-times"></i>
                 </button>
             </div>
             <div class="modal-body">
-                <p class="text-muted mb-4">Standart ölçülerden farklı modüller için özel değerler girin. Boş bırakılan
-                    modüller standart değerleri kullanır.</p>
+                <p class="text-muted mb-4" data-i18n="module_settings_desc">Standart ölçülerden farklı modüller için
+                    özel değerler girin. Boş bırakılan modüller standart değerleri kullanır.</p>
 
                 <div id="module-list" class="module-depth-list">
                     <div class="table-empty">
@@ -2624,12 +2726,12 @@
                 </div>
             </div>
             <div class="modal-footer">
-                <button class="btn btn-secondary" data-close-modal>İptal</button>
+                <button class="btn btn-secondary" data-close-modal data-i18n="cancel">İptal</button>
                 <button class="btn btn-warning" onclick="clearCustomDepths()">
-                    <i class="fas fa-undo"></i> Sıfırla
+                    <i class="fas fa-undo"></i> <span data-i18n="reset">Sıfırla</span>
                 </button>
                 <button class="btn btn-warning" onclick="applyModuleDepths()">
-                    <i class="fas fa-check"></i> Uygula
+                    <i class="fas fa-check"></i> <span data-i18n="apply">Uygula</span>
                 </button>
             </div>
         </div>
@@ -2912,7 +3014,7 @@
                         </div>
                         <div class="stat-content">
                             <div class="stat-value" id="result-parts">0</div>
-                            <div class="stat-label">Toplam Parça</div>
+                            <div class="stat-label" data-i18n="total_part">Toplam Parça</div>
                         </div>
                     </div>
                     <div class="stat-card glass-card">
@@ -2921,7 +3023,7 @@
                         </div>
                         <div class="stat-content">
                             <div class="stat-value" id="result-materials">0</div>
-                            <div class="stat-label">Malzeme Çeşidi</div>
+                            <div class="stat-label" data-i18n="material_type">Malzeme Çeşidi</div>
                         </div>
                     </div>
                     <div class="stat-card glass-card">
@@ -2930,7 +3032,7 @@
                         </div>
                         <div class="stat-content">
                             <div class="stat-value" id="result-types">0</div>
-                            <div class="stat-label">Parça Tipi</div>
+                            <div class="stat-label" data-i18n="part_type">Parça Tipi</div>
                         </div>
                     </div>
                 </div>
@@ -2938,10 +3040,10 @@
                 <!-- Tabs -->
                 <div class="tabs">
                     <button class="tab-btn active" data-tab="results-body">
-                        Gövde (<span id="body-count">0</span>)
+                        <span data-i18n="body_parts">Gövde</span> (<span id="body-count">0</span>)
                     </button>
                     <button class="tab-btn" data-tab="results-thin">
-                        İnce (<span id="thin-count">0</span>)
+                        <span data-i18n="thin_parts">İnce</span> (<span id="thin-count">0</span>)
                     </button>
                 </div>
 
@@ -2990,9 +3092,9 @@
                 </div>
             </div>
             <div class="modal-footer">
-                <button class="btn btn-secondary" data-close-modal>İptal</button>
+                <button class="btn btn-secondary" data-close-modal data-i18n="cancel">İptal</button>
                 <button class="btn btn-primary" id="btn-save-and-export">
-                    <i class="fas fa-save"></i> Kaydet ve Excel Oluştur
+                    <i class="fas fa-save"></i> <span data-i18n="save_and_export">Kaydet ve Excel Oluştur</span>
                 </button>
             </div>
         </div>
@@ -3004,22 +3106,23 @@
             <div class="modal-header">
                 <h3 class="modal-title">
                     <i class="fas fa-sliders-h"></i>
-                    <span>Çıktı Ayarları</span>
+                    <span data-i18n="output_settings">Çıktı Ayarları</span>
                 </h3>
                 <button class="modal-close" data-close-modal>
                     <i class="fas fa-times"></i>
                 </button>
             </div>
             <div class="modal-body">
-                <p class="text-secondary mb-4">Çıktıya dahil edilecek parça tiplerini seçin:</p>
+                <p class="text-secondary mb-4" data-i18n="select_part_types">Çıktıya dahil edilecek parça tiplerini
+                    seçin:</p>
 
                 <!-- Quick Actions -->
                 <div class="flex gap-2 mb-4">
                     <button class="btn btn-sm btn-secondary" onclick="selectAllPartTypes()">
-                        <i class="fas fa-check-double"></i> Tümünü Seç
+                        <i class="fas fa-check-double"></i> <span data-i18n="select_all">Tümünü Seç</span>
                     </button>
                     <button class="btn btn-sm btn-secondary" onclick="deselectAllPartTypes()">
-                        <i class="fas fa-times"></i> Tümünü Kaldır
+                        <i class="fas fa-times"></i> <span data-i18n="deselect_all">Tümünü Kaldır</span>
                     </button>
                 </div>
 
@@ -3031,15 +3134,15 @@
                 <!-- Summary -->
                 <div class="glass-card p-4 mt-4">
                     <div class="flex justify-between items-center">
-                        <span class="text-secondary">Seçilen parça sayısı:</span>
+                        <span class="text-secondary" data-i18n="selected_parts">Seçilen parça sayısı:</span>
                         <span class="font-bold text-lg" id="selected-parts-count">0</span>
                     </div>
                 </div>
             </div>
             <div class="modal-footer">
-                <button class="btn btn-secondary" data-close-modal>İptal</button>
+                <button class="btn btn-secondary" data-close-modal data-i18n="cancel">İptal</button>
                 <button class="btn btn-primary" id="btn-apply-output-settings">
-                    <i class="fas fa-check"></i> Uygula ve Analiz Et
+                    <i class="fas fa-check"></i> <span data-i18n="apply_and_analyze">Uygula ve Analiz Et</span>
                 </button>
             </div>
         </div>
@@ -3051,34 +3154,36 @@
             <div class="modal-header">
                 <h3 class="modal-title">
                     <i class="fas fa-layer-group"></i>
-                    <span>Toplu Dolap Ayarları</span>
+                    <span data-i18n="cabinet_settings_title">Toplu Dolap Ayarları</span>
                 </h3>
                 <button class="modal-close" data-close-modal>
                     <i class="fas fa-times"></i>
                 </button>
             </div>
             <div class="modal-body">
-                <p class="text-secondary mb-4">Tüm dolap tipleri için varsayılan ölçüleri ayarlayın. Modül adından
-                    tespit edilen dolap tipine göre otomatik uygulanır.</p>
+                <p class="text-secondary mb-4" data-i18n="cabinet_settings_desc">Tüm dolap tipleri için varsayılan
+                    ölçüleri ayarlayın. Modül adından tespit edilen dolap tipine göre otomatik uygulanır.</p>
 
                 <!-- Alt Dolap -->
                 <div class="module-item mb-3"
                     style="display: flex; align-items: center; gap: 1rem; padding: 1rem; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--border-radius-sm);">
                     <div style="display: flex; flex-direction: column; min-width: 80px;">
-                        <span style="font-size: 0.7rem; color: var(--primary); font-weight: 600;">ALT DOLAP</span>
-                        <span style="font-size: 0.75rem; color: var(--text-muted);">Tezgah altı</span>
+                        <span style="font-size: 0.7rem; color: var(--primary); font-weight: 600;"
+                            data-i18n="base_cabinet">ALT DOLAP</span>
+                        <span style="font-size: 0.75rem; color: var(--text-muted);" data-i18n="base_cabinet_desc">Tezgah
+                            altı</span>
                     </div>
                     <div style="flex: 1; display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
                         <div class="input-group" style="gap: 0.25rem;">
-                            <label
-                                style="font-size: 0.7rem; text-transform: uppercase; color: var(--text-muted);">Yükseklik</label>
+                            <label style="font-size: 0.7rem; text-transform: uppercase; color: var(--text-muted);"
+                                data-i18n="height">Yükseklik</label>
                             <input type="number" class="input" id="cabinet-alt-yukseklik" value="720"
                                 style="padding: 0.5rem; font-size: 0.875rem;">
                             <span style="font-size: 0.65rem; color: var(--text-muted);">720mm</span>
                         </div>
                         <div class="input-group" style="gap: 0.25rem;">
-                            <label
-                                style="font-size: 0.7rem; text-transform: uppercase; color: var(--text-muted);">Derinlik</label>
+                            <label style="font-size: 0.7rem; text-transform: uppercase; color: var(--text-muted);"
+                                data-i18n="depth">Derinlik</label>
                             <input type="number" class="input" id="cabinet-alt-derinlik" value="580"
                                 style="padding: 0.5rem; font-size: 0.875rem;">
                             <span style="font-size: 0.65rem; color: var(--text-muted);">580mm</span>
@@ -3090,20 +3195,22 @@
                 <div class="module-item mb-3"
                     style="display: flex; align-items: center; gap: 1rem; padding: 1rem; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--border-radius-sm);">
                     <div style="display: flex; flex-direction: column; min-width: 80px;">
-                        <span style="font-size: 0.7rem; color: #8b5cf6; font-weight: 600;">ÜST DOLAP</span>
-                        <span style="font-size: 0.75rem; color: var(--text-muted);">Asma dolap</span>
+                        <span style="font-size: 0.7rem; color: #8b5cf6; font-weight: 600;" data-i18n="wall_cabinet">ÜST
+                            DOLAP</span>
+                        <span style="font-size: 0.75rem; color: var(--text-muted);" data-i18n="wall_cabinet_desc">Asma
+                            dolap</span>
                     </div>
                     <div style="flex: 1; display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
                         <div class="input-group" style="gap: 0.25rem;">
-                            <label
-                                style="font-size: 0.7rem; text-transform: uppercase; color: var(--text-muted);">Yükseklik</label>
+                            <label style="font-size: 0.7rem; text-transform: uppercase; color: var(--text-muted);"
+                                data-i18n="height">Yükseklik</label>
                             <input type="number" class="input" id="cabinet-ust-yukseklik" value="720"
                                 style="padding: 0.5rem; font-size: 0.875rem;">
                             <span style="font-size: 0.65rem; color: var(--text-muted);">720mm</span>
                         </div>
                         <div class="input-group" style="gap: 0.25rem;">
-                            <label
-                                style="font-size: 0.7rem; text-transform: uppercase; color: var(--text-muted);">Derinlik</label>
+                            <label style="font-size: 0.7rem; text-transform: uppercase; color: var(--text-muted);"
+                                data-i18n="depth">Derinlik</label>
                             <input type="number" class="input" id="cabinet-ust-derinlik" value="330"
                                 style="padding: 0.5rem; font-size: 0.875rem;">
                             <span style="font-size: 0.65rem; color: var(--text-muted);">330mm</span>
@@ -3115,20 +3222,22 @@
                 <div class="module-item mb-3"
                     style="display: flex; align-items: center; gap: 1rem; padding: 1rem; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--border-radius-sm);">
                     <div style="display: flex; flex-direction: column; min-width: 80px;">
-                        <span style="font-size: 0.7rem; color: #10b981; font-weight: 600;">BOY DOLAP</span>
-                        <span style="font-size: 0.75rem; color: var(--text-muted);">Tam boy</span>
+                        <span style="font-size: 0.7rem; color: #10b981; font-weight: 600;" data-i18n="tall_cabinet">BOY
+                            DOLAP</span>
+                        <span style="font-size: 0.75rem; color: var(--text-muted);" data-i18n="tall_cabinet_desc">Tam
+                            boy</span>
                     </div>
                     <div style="flex: 1; display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
                         <div class="input-group" style="gap: 0.25rem;">
-                            <label
-                                style="font-size: 0.7rem; text-transform: uppercase; color: var(--text-muted);">Yükseklik</label>
+                            <label style="font-size: 0.7rem; text-transform: uppercase; color: var(--text-muted);"
+                                data-i18n="height">Yükseklik</label>
                             <input type="number" class="input" id="cabinet-boy-yukseklik" value="2100"
                                 style="padding: 0.5rem; font-size: 0.875rem;">
                             <span style="font-size: 0.65rem; color: var(--text-muted);">2100mm</span>
                         </div>
                         <div class="input-group" style="gap: 0.25rem;">
-                            <label
-                                style="font-size: 0.7rem; text-transform: uppercase; color: var(--text-muted);">Derinlik</label>
+                            <label style="font-size: 0.7rem; text-transform: uppercase; color: var(--text-muted);"
+                                data-i18n="depth">Derinlik</label>
                             <input type="number" class="input" id="cabinet-boy-derinlik" value="580"
                                 style="padding: 0.5rem; font-size: 0.875rem;">
                             <span style="font-size: 0.65rem; color: var(--text-muted);">580mm</span>
@@ -3138,12 +3247,12 @@
 
             </div>
             <div class="modal-footer">
-                <button class="btn btn-secondary" data-close-modal>İptal</button>
+                <button class="btn btn-secondary" data-close-modal data-i18n="cancel">İptal</button>
                 <button class="btn btn-warning" onclick="resetCabinetSettings()">
-                    <i class="fas fa-undo"></i> Sıfırla
+                    <i class="fas fa-undo"></i> <span data-i18n="reset">Sıfırla</span>
                 </button>
                 <button class="btn btn-warning" onclick="saveCabinetSettings()">
-                    <i class="fas fa-check"></i> Uygula
+                    <i class="fas fa-check"></i> <span data-i18n="apply">Uygula</span>
                 </button>
             </div>
         </div>
@@ -3155,7 +3264,7 @@
             <div class="modal-header">
                 <h3 class="modal-title">
                     <i class="fas fa-file-alt"></i>
-                    <span>İş Detayı</span>
+                    <span data-i18n="job_detail">İş Detayı</span>
                 </h3>
                 <button class="modal-close" data-close-modal>
                     <i class="fas fa-times"></i>
@@ -3164,34 +3273,34 @@
             <div class="modal-body">
                 <div class="settings-group">
                     <div class="setting-row">
-                        <span class="setting-label">İş Numarası</span>
+                        <span class="setting-label" data-i18n="job_number">İş Numarası</span>
                         <span class="font-semibold" id="detail-job-no">-</span>
                     </div>
                     <div class="setting-row">
-                        <span class="setting-label">Tarih</span>
+                        <span class="setting-label" data-i18n="date">Tarih</span>
                         <span id="detail-date">-</span>
                     </div>
                     <div class="setting-row">
-                        <span class="setting-label">Dosya</span>
+                        <span class="setting-label" data-i18n="file">Dosya</span>
                         <span id="detail-file">-</span>
                     </div>
                     <div class="setting-row">
-                        <span class="setting-label">Toplam Parça</span>
+                        <span class="setting-label" data-i18n="total_part">Toplam Parça</span>
                         <span id="detail-parts">-</span>
                     </div>
                     <div class="setting-row">
-                        <span class="setting-label">Malzeme Çeşidi</span>
+                        <span class="setting-label" data-i18n="material_type">Malzeme Çeşidi</span>
                         <span id="detail-materials">-</span>
                     </div>
                 </div>
             </div>
             <div class="modal-footer">
-                <button class="btn btn-secondary" data-close-modal>Kapat</button>
+                <button class="btn btn-secondary" data-close-modal data-i18n="close">Kapat</button>
                 <button class="btn btn-primary" id="btn-reprocess">
-                    <i class="fas fa-redo"></i> Tekrar İşle
+                    <i class="fas fa-redo"></i> <span data-i18n="reprocess">Tekrar İşle</span>
                 </button>
                 <button class="btn btn-success" id="btn-open-job-excel">
-                    <i class="fas fa-file-excel"></i> Excel'i Aç
+                    <i class="fas fa-file-excel"></i> <span data-i18n="open_excel">Excel'i Aç</span>
                 </button>
             </div>
         </div>
@@ -3256,64 +3365,264 @@
         // ============================================
         const translations = {
             tr: {
+                // Navigation & Auth
                 login: 'Giriş Yap',
+                logout: 'Çıkış Yap',
                 dashboard: 'Ana Sayfa',
                 history: 'Geçmiş',
                 materials: 'Malzemeler',
                 settings: 'Ayarlar',
+
+                // Welcome
                 welcome: 'Hoş Geldiniz',
                 dashboard_subtitle: 'Kesim listesi oluşturmak için dosya yükleyin',
+
+                // Stats
                 total_jobs: 'Toplam İş',
                 total_parts: 'Toplam Parça',
                 saved_materials: 'Kayıtlı Malzeme',
                 today_jobs: 'Bugünkü İş',
+
+                // File Upload
                 drop_file: 'Dosyayı buraya sürükleyin veya tıklayın',
                 supported_formats: 'Desteklenen: .xlsx, .xls, .csv',
+                files_ready: 'dosya işlenmeye hazır',
+                click_analyze: 'Analiz butonuna tıklayın',
+
+                // Action Buttons
+                cabinet_settings: 'Toplu Dolap Ayarları',
+                custom_module: 'Özel Modül',
                 analyze: 'Analiz Et',
+                quick_analyze: 'Hızlı Analiz',
                 batch_process: 'Toplu İşlem',
+
+                // History Page
                 job_history: 'İş Geçmişi',
                 history_subtitle: 'Geçmiş işlerinizi görüntüleyin ve yönetin',
                 merge_selected: 'Seçilenleri Birleştir',
                 no_history: 'Henüz işlenmiş dosya bulunmuyor',
+                search_job: 'İş numarası veya dosya ara...',
+
+                // Materials Page
                 material_memory: 'Malzeme Hafızası',
                 materials_subtitle: 'Kayıtlı malzeme kalınlıklarını yönetin',
                 clear_all: 'Tümünü Sil',
                 no_materials: 'Henüz kayıtlı malzeme bulunmuyor',
+                search_material: 'Malzeme kodu ara...',
+
+                // Results Modal
                 results: 'Sonuçlar',
+                total_part: 'Toplam Parça',
+                material_type: 'Malzeme Çeşidi',
+                part_type: 'Parça Tipi',
+                body_parts: 'Gövde',
+                thin_parts: 'İnce',
+                save_and_export: 'Kaydet ve Excel Oluştur',
+
+                // Cabinet Settings Modal
+                cabinet_settings_title: 'Toplu Dolap Ayarları',
+                cabinet_settings_desc: 'Tüm dolap tipleri için varsayılan ölçüleri ayarlayın. Modül adından tespit edilen dolap tipine göre otomatik uygulanır.',
+                base_cabinet: 'ALT DOLAP',
+                base_cabinet_desc: 'Tezgah altı',
+                wall_cabinet: 'ÜST DOLAP',
+                wall_cabinet_desc: 'Asma dolap',
+                tall_cabinet: 'BOY DOLAP',
+                tall_cabinet_desc: 'Tam boy',
+                height: 'Yükseklik',
+                depth: 'Derinlik',
+                width: 'Genişlik',
+
+                // Module Depth Modal
+                module_settings: 'Özel Modül Ayarları',
+                module_settings_desc: 'Her modül için özel boyut değerleri belirleyebilirsiniz.',
+                clear_custom: 'Özel Ayarları Temizle',
+                apply_and_analyze: 'Uygula ve Analiz Et',
+
+                // Common Buttons
+                cancel: 'İptal',
+                apply: 'Uygula',
+                reset: 'Sıfırla',
+                close: 'Kapat',
+                save: 'Kaydet',
+                delete: 'Sil',
+                confirm: 'Onayla',
+                clear_all_files: 'Tümünü Temizle',
+
+                // Status Messages
                 ready: 'Hazır',
                 processing: 'İşleniyor...',
                 success: 'Başarılı',
-                error: 'Hata'
+                error: 'Hata',
+                warning: 'Uyarı',
+                info: 'Bilgi',
+                loading: 'Yükleniyor...',
+
+                // Toast Messages
+                files_loaded: 'Dosyalar Yüklendi',
+                files_added: 'dosya eklendi',
+                analysis_complete: 'Analiz Tamamlandı',
+                export_complete: 'Excel oluşturuldu',
+                settings_saved: 'Ayarlar kaydedildi',
+
+                // Confirm Messages
+                confirm_delete: 'Silmek istediğinize emin misiniz?',
+                confirm_clear: 'Tümünü temizlemek istediğinize emin misiniz?',
+
+                // Material Dialog
+                unknown_material: 'Bilinmeyen Malzeme',
+                select_thickness: 'Kalınlık seçin',
+                remaining_materials: 'bilinmeyen malzeme daha',
+
+                // Output Settings
+                output_settings: 'Çıktı Ayarları',
+                select_part_types: 'Çıktıya dahil edilecek parça tiplerini seçin:',
+                select_all: 'Tümünü Seç',
+                deselect_all: 'Tümünü Kaldır',
+                selected_parts: 'Seçilen parça sayısı:',
+
+                // Job Detail
+                job_detail: 'İş Detayı',
+                job_number: 'İş Numarası',
+                date: 'Tarih',
+                file: 'Dosya',
+                reprocess: 'Tekrar İşle',
+                open_excel: 'Excel\'i Aç',
+
+                // Table Headers
+                thickness: 'Kalınlık',
+                material: 'Malzeme',
+                length: 'Boy',
+                qty: 'Adet'
             },
             en: {
+                // Navigation & Auth
                 login: 'Login',
+                logout: 'Logout',
                 dashboard: 'Dashboard',
                 history: 'History',
                 materials: 'Materials',
                 settings: 'Settings',
+
+                // Welcome
                 welcome: 'Welcome',
                 dashboard_subtitle: 'Upload a file to create cutting list',
+
+                // Stats
                 total_jobs: 'Total Jobs',
                 total_parts: 'Total Parts',
                 saved_materials: 'Saved Materials',
                 today_jobs: 'Today\'s Jobs',
+
+                // File Upload
                 drop_file: 'Drag & drop file here or click',
                 supported_formats: 'Supported: .xlsx, .xls, .csv',
+                files_ready: 'file(s) ready to process',
+                click_analyze: 'Click Analyze button',
+
+                // Action Buttons
+                cabinet_settings: 'Cabinet Settings',
+                custom_module: 'Custom Module',
                 analyze: 'Analyze',
+                quick_analyze: 'Quick Analyze',
                 batch_process: 'Batch Process',
+
+                // History Page
                 job_history: 'Job History',
                 history_subtitle: 'View and manage your past jobs',
                 merge_selected: 'Merge Selected',
                 no_history: 'No processed files yet',
+                search_job: 'Search job number or file...',
+
+                // Materials Page
                 material_memory: 'Material Memory',
                 materials_subtitle: 'Manage saved material thicknesses',
                 clear_all: 'Clear All',
                 no_materials: 'No saved materials yet',
+                search_material: 'Search material code...',
+
+                // Results Modal
                 results: 'Results',
+                total_part: 'Total Parts',
+                material_type: 'Material Types',
+                part_type: 'Part Types',
+                body_parts: 'Body',
+                thin_parts: 'Thin',
+                save_and_export: 'Save & Export Excel',
+
+                // Cabinet Settings Modal
+                cabinet_settings_title: 'Cabinet Settings',
+                cabinet_settings_desc: 'Set default dimensions for all cabinet types. Applied automatically based on module name.',
+                base_cabinet: 'BASE CABINET',
+                base_cabinet_desc: 'Under counter',
+                wall_cabinet: 'WALL CABINET',
+                wall_cabinet_desc: 'Wall mounted',
+                tall_cabinet: 'TALL CABINET',
+                tall_cabinet_desc: 'Full height',
+                height: 'Height',
+                depth: 'Depth',
+                width: 'Width',
+
+                // Module Depth Modal
+                module_settings: 'Custom Module Settings',
+                module_settings_desc: 'Set custom dimension values for each module.',
+                clear_custom: 'Clear Custom Settings',
+                apply_and_analyze: 'Apply & Analyze',
+
+                // Common Buttons
+                cancel: 'Cancel',
+                apply: 'Apply',
+                reset: 'Reset',
+                close: 'Close',
+                save: 'Save',
+                delete: 'Delete',
+                confirm: 'Confirm',
+                clear_all_files: 'Clear All',
+
+                // Status Messages
                 ready: 'Ready',
                 processing: 'Processing...',
                 success: 'Success',
-                error: 'Error'
+                error: 'Error',
+                warning: 'Warning',
+                info: 'Info',
+                loading: 'Loading...',
+
+                // Toast Messages
+                files_loaded: 'Files Loaded',
+                files_added: 'file(s) added',
+                analysis_complete: 'Analysis Complete',
+                export_complete: 'Excel created',
+                settings_saved: 'Settings saved',
+
+                // Confirm Messages
+                confirm_delete: 'Are you sure you want to delete?',
+                confirm_clear: 'Are you sure you want to clear all?',
+
+                // Material Dialog
+                unknown_material: 'Unknown Material',
+                select_thickness: 'Select thickness',
+                remaining_materials: 'more unknown materials',
+
+                // Output Settings
+                output_settings: 'Output Settings',
+                select_part_types: 'Select part types to include in output:',
+                select_all: 'Select All',
+                deselect_all: 'Deselect All',
+                selected_parts: 'Selected parts count:',
+
+                // Job Detail
+                job_detail: 'Job Detail',
+                job_number: 'Job Number',
+                date: 'Date',
+                file: 'File',
+                reprocess: 'Reprocess',
+                open_excel: 'Open Excel',
+
+                // Table Headers
+                thickness: 'Thickness',
+                material: 'Material',
+                length: 'Length',
+                qty: 'Qty'
             }
         };
 
@@ -3604,8 +3913,8 @@
 
             if (state.files.length === 0) {
                 dropZone.classList.remove('has-file');
-                dropZone.querySelector('.drop-zone-icon').textContent = '📁';
-                dropZone.querySelector('.drop-zone-text').textContent = t('drop_file');
+                dropZone.querySelector('.drop-zone-icon').innerHTML = '📁';
+                dropZone.querySelector('.drop-zone-text').innerHTML = t('drop_file');
                 dropZone.querySelector('.drop-zone-hint').classList.remove('hidden');
                 container.classList.add('hidden');
                 container.innerHTML = '';
@@ -3618,9 +3927,22 @@
                 if (btnCabinetSettings) btnCabinetSettings.disabled = true;
             } else {
                 dropZone.classList.add('has-file');
-                dropZone.querySelector('.drop-zone-icon').textContent = '✅';
-                dropZone.querySelector('.drop-zone-text').textContent = `${state.files.length} dosya yüklendi`;
-                dropZone.querySelector('.drop-zone-hint').classList.add('hidden');
+                // Modern animasyonlu hazır ikonu
+                dropZone.querySelector('.drop-zone-icon').innerHTML = `
+                    <div class="drop-zone-ready-icon">
+                        <i class="fas fa-cog fa-spin" style="animation: fa-spin 3s linear infinite;"></i>
+                    </div>
+                `;
+                dropZone.querySelector('.drop-zone-text').textContent = `${state.files.length} ${t('files_ready')}`;
+                // Yönlendirme mesajını drop-zone-hint'e yaz
+                const hintEl = dropZone.querySelector('.drop-zone-hint');
+                hintEl.innerHTML = `
+                    <div class="drop-zone-ready-hint">
+                        <i class="fas fa-arrow-right"></i>
+                        <span>${t('click_analyze')}</span>
+                    </div>
+                `;
+                hintEl.classList.remove('hidden');
 
                 container.classList.remove('hidden');
                 container.innerHTML = `
@@ -3636,7 +3958,7 @@
                         `).join('')}
                     </div>
                     <button class="btn btn-ghost btn-sm mt-2" onclick="clearAllFiles()">
-                        <i class="fas fa-trash"></i> Tümünü Temizle
+                        <i class="fas fa-trash"></i> ${t('clear_all_files')}
                     </button>
                 `;
 
