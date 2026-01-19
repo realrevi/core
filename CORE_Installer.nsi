@@ -1,8 +1,8 @@
-; CORE v3.5 - NSIS Installer Script
+; CORE v4.0 - NSIS Installer Script
 ; ====================================
 
 !define APP_NAME "CORE"
-!define APP_VERSION "3.5"
+!define APP_VERSION "4.0"
 !define APP_PUBLISHER "Your Company"
 !define APP_URL "https://yourwebsite.com"
 !define APP_EXE "CORE.exe"

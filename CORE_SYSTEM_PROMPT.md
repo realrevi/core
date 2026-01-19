@@ -1,4 +1,4 @@
-# CORE v3.6 - Sistem Prompt Dokümantasyonu
+# CORE v4.0 - Sistem Prompt Dokümantasyonu
 
 > **Cut Optimization & Reporting Engine**  
 > Mobilya üretimi için Excel kesim listesi analiz ve optimizasyon yazılımı
@@ -75,7 +75,7 @@ Excel:    pandas + openpyxl
 ```python
 class Config:
     APP_NAME = "CORE"
-    APP_VERSION = "3.5"
+    APP_VERSION = "3.6"
     WINDOW_WIDTH = 1400
     WINDOW_HEIGHT = 900
     
@@ -1009,7 +1009,7 @@ Ayarlar Modal:
 │   ├── [Yedek Al] → JSON indir
 │   └── [Yedek Yükle] → JSON yükle
 └── Hakkında Tab
-    └── CORE v3.5 bilgileri
+    └── CORE v3.6 bilgileri
 ```
 
 ---
@@ -1186,5 +1186,5 @@ Tolerans:   ±5mm
 
 ---
 
-**Son Güncelleme:** v3.5  
-**Geliştirici Notu:** Bu dokümantasyon CORE v3.5 için tersine mühendislik ile oluşturulmuştur.
+**Son Güncelleme:** v3.6  
+**Geliştirici Notu:** Bu dokümantasyon CORE v3.6 için tersine mühendislik ile oluşturulmuştur.

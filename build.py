@@ -1,5 +1,5 @@
 """
-CORE v3.5 - Build Script
+CORE v4.0 - Build Script
 Creates EXE with PyInstaller - WITH LOGO SUPPORT
 """
 
@@ -10,7 +10,7 @@ import subprocess
 from pathlib import Path
 
 APP_NAME = "CORE"
-APP_VERSION = "3.5"
+APP_VERSION = "4.0"
 MAIN_SCRIPT = "main.py"
 ICON_FILE = "CORE_LOGO.ico"
 LOGO_FILE = "CORE_LOGO.png"

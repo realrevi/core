@@ -1,6 +1,6 @@
 """
 ============================================================
-CORE - Cut Optimization & Reporting Engine v3.5
+CORE - Cut Optimization & Reporting Engine v4.0
 Python Backend with PyWebview - IMPROVED VERSION
 ============================================================
 """
@@ -81,7 +81,7 @@ except ImportError:
 class Config:
     """Application configuration"""
     APP_NAME = "CORE"
-    APP_VERSION = "3.5"
+    APP_VERSION = "4.0"
     APP_TITLE = f"{APP_NAME} - Cut Optimization & Reporting Engine v{APP_VERSION}"
 
     # Window settings
@@ -2741,8 +2741,8 @@ def main():
 
     print("Window created, starting webview...")
 
-    # Start webview (debug=True for debugging)
-    webview.start(debug=True)
+    # Start webview (debug=False for production)
+    webview.start(debug=False)
 
 if __name__ == "__main__":
     main()
